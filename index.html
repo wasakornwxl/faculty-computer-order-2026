@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Faculty Computer Order</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0}
+img{max-width:100%}
+:root{
+  --ground:#f6f7f9; --surface:#ffffff; --surface-2:#eef1f5; --ink:#15171a; --muted:#5f6670; --line:#dde2e8;
+  --accent:#1459b8; --accent-ink:#ffffff; --accent-soft:#e3edfb;
+  --ok:#187a3c; --ok-soft:#e2f4e8; --warn:#9a4d00; --warn-soft:#fdf0de; --bad:#b3261e; --bad-soft:#fbe7e5;
+  --shadow:0 1px 2px rgba(20,30,50,.06),0 8px 24px rgba(20,30,50,.06);
+  --display:"Anuphan","IBM Plex Sans Thai",system-ui,sans-serif;
+  --body:"IBM Plex Sans Thai","Anuphan",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  color-scheme:dark;
+  --ground:#0f1113; --surface:#181b1f; --surface-2:#22262b; --ink:#eef0f3; --muted:#a2a9b3; --line:#2e333a;
+  --accent:#5b9bf0; --accent-ink:#0b1320; --accent-soft:#1a2a42;
+  --ok:#5cc983; --ok-soft:#13301e; --warn:#f0a955; --warn-soft:#3a2710; --bad:#f08b83; --bad-soft:#3b1714;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#0f1113; --surface:#181b1f; --surface-2:#22262b; --ink:#eef0f3; --muted:#a2a9b3; --line:#2e333a;
+  --accent:#5b9bf0; --accent-ink:#0b1320; --accent-soft:#1a2a42;
+  --ok:#5cc983; --ok-soft:#13301e; --warn:#f0a955; --warn-soft:#3a2710; --bad:#f08b83; --bad-soft:#3b1714;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.15;letter-spacing:-.01em}
+p{margin:0}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;background:color-mix(in srgb,var(--ground) 82%,transparent);backdrop-filter:saturate(1.6) blur(14px);-webkit-backdrop-filter:saturate(1.6) blur(14px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1080px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px}
+.brand{font-family:var(--display);font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px;background:none;border:0;padding:0;cursor:pointer}
+.brand-mark{width:22px;height:22px;border-radius:6px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink);font-size:12px;font-weight:700}
+.crumbs{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px;flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.crumbs button{background:none;border:0;padding:0;color:var(--accent);cursor:pointer}
+.admin-link{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:13px;cursor:pointer;color:var(--ink)}
+.admin-link[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+
+main{max-width:1080px;margin:0 auto;padding-inline:16px;padding-block:40px 120px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.th{color:var(--muted);font-size:.9em;font-weight:500}
+
+/* Chooser */
+.hero{text-align:center;display:grid;gap:10px;margin-bottom:36px}
+.hero h1{font-size:clamp(34px,6vw,56px);font-weight:700}
+.hero p{color:var(--muted);font-size:17px}
+.allow{display:inline-flex;gap:8px;align-items:center;margin:6px auto 0;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:14px}
+.allow b{font-family:var(--display)}
+.choose{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.pick{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px 24px 24px;text-align:center;cursor:pointer;display:grid;gap:14px;justify-items:center;box-shadow:var(--shadow);transition:transform .2s ease,border-color .2s ease}
+.pick:hover{transform:translateY(-3px);border-color:var(--accent)}
+.pick h2{font-size:34px;font-weight:700}
+.pick .sub{color:var(--muted)}
+.pick .range{font-size:14px}
+.pick .cta{color:var(--accent);font-weight:600}
+.pick .photo{width:min(320px,100%);height:210px;object-fit:contain}
+.saved{background:var(--accent-soft);border-radius:16px;padding:14px 18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:28px}
+.saved p{flex:1;min-width:220px}
+
+/* Lineup */
+.lineup-head{display:grid;gap:8px;margin-bottom:28px}
+.lineup-head h1{font-size:clamp(30px,5vw,44px)}
+.lineup-head p{color:var(--muted);max-width:62ch}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.card .photo{width:100%;height:170px;object-fit:contain;align-self:center}
+.card h3{font-size:22px}
+.card .chip{color:var(--muted);font-size:13px}
+.hl{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-block:1px solid var(--line);padding-block:12px}
+.hl div{display:grid;text-align:center}
+.hl b{font-family:var(--display);font-size:17px}
+.hl span{font-size:12px;color:var(--muted)}
+.price{font-family:var(--display);font-size:20px;font-weight:600}
+.price small{font-family:var(--body);font-size:12px;font-weight:400;color:var(--muted);display:block}
+.card .spacer{flex:1}
+.cost{display:grid;gap:2px;border-radius:12px;padding:10px 14px}
+.cost b{font-family:var(--display);font-size:20px;font-weight:600;line-height:1.2}
+.cost small{font-size:12px;opacity:.85}
+.cost.ok{background:var(--ok-soft);color:var(--ok)}
+.cost.warn{background:var(--warn-soft);color:var(--warn)}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 10px;font-size:12.5px;font-weight:600;width:fit-content}
+.badge.ok{background:var(--ok-soft);color:var(--ok)}
+.badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.bad{background:var(--bad-soft);color:var(--bad)}
+.badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.btn{appearance:none;border:0;border-radius:999px;padding:10px 20px;background:var(--accent);color:var(--accent-ink);font-weight:600;cursor:pointer;text-align:center}
+.btn:hover{filter:brightness(1.07)}
+.btn[disabled]{opacity:.45;cursor:not-allowed;filter:none}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.small{padding:6px 14px;font-size:13px}
+.quote-meta{font-size:12px;color:var(--muted)}
+.quote-meta.expired{color:var(--bad)}
+
+/* Configure */
+.config{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:40px;align-items:start}
+@media (max-width:820px){.config{grid-template-columns:1fr;gap:24px}}
+.stage{position:sticky;top:calc(env(safe-area-inset-top,0px) + 72px);display:grid;gap:18px}
+@media (max-width:820px){.stage{position:static}}
+.stage-art{background:var(--surface-2);border-radius:24px;padding:36px 24px;display:grid;place-items:center}
+.stage-art .photo{width:min(460px,100%);height:clamp(220px,34vw,340px);object-fit:contain}
+.specs{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.specs h3{font-size:15px;margin-bottom:8px}
+.specs ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.panel{display:grid;gap:26px}
+.panel h1{font-size:clamp(28px,4.5vw,40px)}
+.section{display:grid;gap:12px}
+.section > h2{font-size:19px}
+.section > h2 .th{font-size:14px;margin-left:6px}
+.opts{display:grid;gap:10px}
+.opt{display:flex;gap:14px;align-items:flex-start;border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;background:var(--surface);cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.opt input{margin-top:5px;accent-color:var(--accent)}
+.opt .t{flex:1;display:grid;gap:2px}
+.opt .t b{font-weight:600}
+.opt .t span{font-size:13px;color:var(--muted)}
+.opt .p{font-weight:600;white-space:nowrap}
+.swatches{display:flex;gap:14px;flex-wrap:wrap}
+.sw{display:grid;justify-items:center;gap:6px;cursor:pointer;font-size:12.5px;color:var(--muted)}
+.sw input{position:absolute;opacity:0;pointer-events:none}
+.sw i{width:34px;height:34px;border-radius:50%;border:1px solid rgba(0,0,0,.15);box-shadow:0 0 0 3px var(--ground),0 0 0 4px transparent}
+.sw:has(input:checked) i{box-shadow:0 0 0 3px var(--ground),0 0 0 5px var(--accent)}
+.sw:has(input:checked){color:var(--ink)}
+.sw:has(input:focus-visible) i{outline:2px solid var(--accent);outline-offset:6px}
+
+.summary{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px 20px;display:grid;gap:8px}
+.row{display:flex;justify-content:space-between;gap:12px}
+.row.total{border-top:1px solid var(--line);padding-top:10px;margin-top:4px;font-family:var(--display);font-size:18px;font-weight:600}
+.row.topup{font-family:var(--display);font-size:18px;font-weight:600;color:var(--warn)}
+.row.ok{color:var(--ok);font-weight:600}
+.row span:first-child{color:var(--muted)}
+.row.total span:first-child,.row.topup span:first-child{color:inherit}
+
+.topup-box{border:1.5px solid var(--warn);background:var(--warn-soft);border-radius:18px;padding:18px 20px;display:grid;gap:12px}
+.topup-box h2{font-size:18px;color:var(--warn)}
+.topup-box p{font-size:14px}
+.field{display:grid;gap:5px}
+.field label{font-size:13.5px;font-weight:500}
+.field .hint{font-size:12.5px;color:var(--muted)}
+.field input,.field textarea,.field select{width:100%;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 12px}
+.field textarea{min-height:76px;resize:vertical}
+.field input:focus,.field textarea:focus{border-color:var(--accent);outline:none;box-shadow:0 0 0 3px var(--accent-soft)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.req{color:var(--bad)}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.check input{margin-top:5px;accent-color:var(--accent)}
+.err{color:var(--bad);font-size:13.5px}
+.notice{border-radius:12px;padding:10px 14px;font-size:13.5px;background:var(--surface-2);color:var(--muted)}
+.notice.bad{background:var(--bad-soft);color:var(--bad)}
+
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:9;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.bar-in{max-width:1080px;margin:0 auto;padding:12px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.bar-in .what{flex:1;min-width:160px;font-size:13px;color:var(--muted)}
+.bar-in .what b{display:block;font-family:var(--display);color:var(--ink);font-size:17px}
+
+/* Done */
+.done{max-width:640px;margin:0 auto;display:grid;gap:20px;text-align:center}
+.done .tick{width:64px;height:64px;border-radius:50%;background:var(--ok-soft);color:var(--ok);display:grid;place-items:center;margin:0 auto}
+.done h1{font-size:clamp(28px,5vw,40px)}
+.receipt{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;display:grid;gap:8px}
+.receipt .ref{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* Admin */
+.admin-head{display:flex;flex-wrap:wrap;gap:16px;align-items:end;justify-content:space-between;margin-bottom:20px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 16px;min-width:140px}
+.stat b{display:block;font-family:var(--display);font-size:22px}
+.stat span{font-size:12.5px;color:var(--muted)}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:900px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--surface-2)}
+td.r,th.r{text-align:right}
+tr:last-child td{border-bottom:0}
+#csvOut{width:100%;min-height:120px;margin-top:12px;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--surface)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.fade{animation:fade .35s ease both}
+@keyframes fade{from{opacity:.4;transform:translateY(6px)}to{opacity:1;transform:none}}
+[hidden]{display:none!important}
+.hint{font-size:12.5px;color:var(--muted)}
+.saved{flex-direction:column;align-items:stretch;gap:8px}
+.saved-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.saved-row p{flex:1;min-width:220px}
+
+/* Tablet promo on the home page */
+.pending-note{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--warn)!important;font-weight:500}
+.pending-note .dot{width:8px;height:8px;border-radius:50%;border:2px solid currentColor}
+.estimate-banner{border:1.5px dashed var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:14px;padding:12px 16px;font-size:13.5px;margin-bottom:22px}
+.stage .estimate-banner{margin-bottom:0}
+.estimate-banner b{color:var(--warn)}
+.blurb{font-size:14px;color:var(--muted)}
+
+/* Tablet option tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tiles.two{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.tile{display:flex;gap:10px;align-items:center;justify-content:space-between;border:1.5px solid var(--line);border-radius:14px;padding:12px 14px;background:var(--surface);cursor:pointer;position:relative}
+.tile input{position:absolute;opacity:0;pointer-events:none}
+.tile:has(input:checked){border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.tile:has(input:focus-visible){outline:2px solid var(--accent);outline-offset:2px}
+.tile.disabled{cursor:not-allowed;opacity:.55;border-style:dashed}
+.tt{display:grid;gap:1px}
+.tt b{font-weight:600}
+.tt span{font-size:12.5px;color:var(--muted)}
+.est{font-size:12px;font-weight:600;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.est.ok{background:var(--ok-soft);color:var(--ok)}
+.est.warn{background:var(--warn-soft);color:var(--warn)}
+
+.actions.start{justify-content:flex-start}
+@media (max-width:640px){.tp-copy .actions.start{justify-content:center}}
+.answered{font-size:13.5px;color:var(--ok)!important;font-weight:500}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;text-decoration:underline;font:inherit}
+.narrow{max-width:620px;margin:0 auto;display:grid;gap:14px}
+.narrow h1{font-size:clamp(28px,5vw,38px)}
+.next-q{background:var(--accent-soft);border-radius:18px;padding:20px;display:grid;gap:10px;text-align:center}
+.next-q h2{font-size:20px}
+.badge{background:var(--surface-2);color:var(--muted)}
+.choose.three{grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.pick{position:relative}
+.pick.is-current{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset,var(--shadow)}
+.current{position:absolute;top:14px;left:14px;background:var(--accent);color:var(--accent-ink);font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px}
+.choose-note{text-align:center;color:var(--muted);font-size:13.5px;margin-top:18px}
+/* Admin tabs */
+.seg{display:inline-flex;background:var(--surface-2);border-radius:999px;padding:4px;gap:4px;margin-bottom:16px;flex-wrap:wrap}
+.seg button{border:0;background:transparent;border-radius:999px;padding:6px 14px;font-size:13.5px;cursor:pointer;color:var(--muted)}
+.seg button[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+</style>
+<script src="config.js"></script>
+</head>
+<body>
+
+
+<header class="topbar">
+  <div class="topbar-in">
+    <button class="brand" id="homeBtn" type="button"><span class="brand-mark" aria-hidden="true">SC</span>Computer &amp; Tablet Order</button>
+    <nav class="crumbs" id="crumbs" aria-label="Steps"></nav>
+  </div>
+</header>
+<main id="app"></main>
+<div class="bar" id="bar" hidden></div>
+
+<script>
+(function(){
+const ALLOWANCE = 50000;
+const TABLET_ALLOWANCE = 40000;
+
+/* Catalog: prices are the VAT-inclusive amounts on each vendor quotation. */
+const APPLECARE_NOTE = "Extends cover to 3 years and adds unlimited accidental-damage repairs (service fee ฿3,300 for screen or enclosure damage, ฿10,000 for other damage).";
+const MAC_COLORS = [
+  {id:"sky", file:"skyblue", name:"Sky Blue", hex:"#c5d6e3"},
+  {id:"silver", file:"silver", name:"Silver", hex:"#e2e4e6"},
+  {id:"starlight", file:"starlight", name:"Starlight", hex:"#e9dfcf"},
+  {id:"midnight", file:"midnight", name:"Midnight", hex:"#2f3845"}
+];
+const CATALOG = [
+  { id:"mba13-m5-8g-16-512", cat:"mac", name:"MacBook Air 13″", tag:"Everyday",
+    chip:"M5 · 10-core CPU · 8-core GPU",
+    hl:[["16GB","memory"],["512GB","SSD"],["Thai","keyboard"]],
+    specs:["M5 chip: 10-core CPU, 8-core GPU, 16-core Neural Engine","16GB unified memory","512GB SSD storage","13.6-inch Liquid Retina display","Backlit Magic Keyboard with Touch ID (Thai)","2× Thunderbolt 4, MagSafe 3, Wi-Fi 7, Bluetooth 6","1-year warranty"],
+    base:43900, applecare:6848, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26091123", quoteDate:"2026-09-21", validUntil:"2026-10-21", screen:13 },
+  { id:"mba13-m5-10g-24-1tb", cat:"mac", name:"MacBook Air 13″", tag:"More memory",
+    chip:"M5 · 10-core CPU · 10-core GPU",
+    hl:[["24GB","memory"],["1TB","SSD"],["Thai","keyboard"]],
+    specs:["M5 chip: 10-core CPU, 10-core GPU, 16-core Neural Engine","24GB unified memory","1TB SSD storage","13.6-inch Liquid Retina display","Backlit Magic Keyboard with Touch ID (Thai)","2× Thunderbolt 4, MagSafe 3, Wi-Fi 7, Bluetooth 6","1-year warranty"],
+    base:60700, applecare:6848, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26091119", quoteDate:"2026-09-21", validUntil:"2026-10-21", screen:13 },
+  { id:"mba13-m5-10g-16-2tb-us", cat:"mac", name:"MacBook Air 13″", tag:"More storage",
+    chip:"M5 · 10-core CPU · 10-core GPU",
+    hl:[["16GB","memory"],["2TB","SSD"],["US","keyboard"]],
+    specs:["M5 chip: 10-core CPU, 10-core GPU, 16-core Neural Engine","16GB unified memory","2TB SSD storage","13.6-inch Liquid Retina display","Backlit Magic Keyboard with Touch ID (U.S. English)","2× Thunderbolt 4, MagSafe 3, Wi-Fi 7, Bluetooth 6","1-year warranty"],
+    base:69496.50, applecare:6848, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26091396", quoteDate:"2026-09-25", validUntil:"2026-10-25", screen:13 },
+  { id:"mba15-m5-10g-32-1tb", cat:"mac", name:"MacBook Air 15″", tag:"Bigger screen",
+    chip:"M5 · 10-core CPU · 10-core GPU",
+    hl:[["32GB","memory"],["1TB","SSD"],["15.3″","display"]],
+    specs:["M5 chip: 10-core CPU, 10-core GPU, 16-core Neural Engine","32GB unified memory","1TB SSD storage","15.3-inch Liquid Retina display","70W USB-C power adapter","Backlit Magic Keyboard with Touch ID (Thai)","2× Thunderbolt 4, MagSafe 3, Wi-Fi 7, Bluetooth 6","1-year warranty"],
+    base:77000, applecare:7811, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26091115", quoteDate:"2026-09-21", validUntil:"2026-10-21", screen:15 },
+  { id:"asus-expertbook-p5", cat:"pc", name:"ASUS ExpertBook P5", tag:"Business ultraportable", model:"P5405CSA",
+    chip:"Intel Core Ultra 7 258V · Arc 140V",
+    hl:[["32GB","memory"],["1TB","SSD"],["3 yr","on-site"]],
+    specs:["Intel Core Ultra 7 258V (up to 4.8 GHz, 8 cores), AI Boost NPU up to 47 TOPS","Intel Arc 140V graphics","32GB LPDDR5X memory","1TB PCIe 4.0 NVMe SSD","14″ WQXGA 2560×1600, 400 nits, anti-glare","1080p IR camera with privacy shutter, fingerprint reader","Wi-Fi 6E, Bluetooth 5.4","2× USB-A, 2× Thunderbolt 4, HDMI; 1.29 kg","Windows 11 Home + Microsoft Office Home 2024","3-year on-site warranty (1 year accidental damage)","Includes sleeve, USB-A to RJ-45 adapter, wireless mouse"],
+    base:49969, vendor:"Inforgen Data System Co., Ltd.", quote:"260617-09", quoteDate:"2026-06-17", validUntil:"2026-07-17", pc:"slim" },
+  { id:"lenovo-legion5", cat:"pc", name:"Lenovo Legion 5", tag:"Performance & GPU", model:"15IAX11",
+    chip:"Intel Core Ultra 9 290HX Plus · RTX 5070",
+    hl:[["RTX 5070","12GB GPU"],["16GB","DDR5"],["512GB","SSD"]],
+    specs:["Intel Core Ultra 9 290HX Plus, 24 cores (8P + 16E), up to 5.5 GHz","NVIDIA GeForce RTX 5070 12GB GDDR7","16GB DDR5-5600 memory","512GB M.2 SSD","WQXGA 2560×1600 display","5MP camera","80Wh battery","Wi-Fi 7, Bluetooth 5.4","2× USB-A, USB-C, Thunderbolt 4, HDMI 2.1, Ethernet","Windows 11 Home"],
+    base:79715, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26090061", quoteDate:"2026-09-02", validUntil:"2026-10-02", pc:"gaming" }
+];
+
+/* Tablets: estimates from the COM7 iPad price list (education price, VAT included). Not a quotation. */
+const TABLET_SOURCE = "COM7 iPad price list, education price (ราคาการศึกษา), VAT included";
+const TABLETS = [
+  { id:"ipad", name:"iPad", chip:"A16 chip", tag:"Everyday", img:"ipad",
+    blurb:"Notes, reading, video calls and Apple Pencil (USB-C) sketching.",
+    sizes:[11], storage:[128,256,512],
+    price:{ wifi:{11:[16300,20300,27300]}, cell:{11:[22300,26300,33300]} },
+    colors:[{id:"silver",name:"Silver",hex:"#e3e4e6"},{id:"blue",name:"Blue",hex:"#a9c1dd"},{id:"pink",name:"Pink",hex:"#f1adbb"},{id:"yellow",name:"Yellow",hex:"#f2dc6e"}] },
+  { id:"air", name:"iPad Air", chip:"M4 chip", tag:"New", img:"air",
+    blurb:"A thin, fast iPad for teaching, annotation and everyday research work.",
+    sizes:[11,13], storage:[128,256,512,1024],
+    price:{ wifi:{11:[26700,30700,37700,48700], 13:[33500,37500,44500,55500]}, cell:{11:[32700,36700,43700,54700], 13:[39500,43500,50500,61500]} },
+    colors:[{id:"spacegray",name:"Space Grey",hex:"#7c7e82"},{id:"starlight",name:"Starlight",hex:"#e6dccb"},{id:"purple",name:"Purple",hex:"#cfc4e1"},{id:"blue",name:"Blue",hex:"#b3cde0"}] },
+  { id:"pro", name:"iPad Pro", chip:"M5 chip", tag:"Most powerful", img:"pro",
+    blurb:"Tandem OLED display and pro performance for demanding creative and data work.",
+    sizes:[11,13], storage:[256,512,1024,2048],
+    price:{ wifi:{11:[40900,47900,62900,81900], 13:[52900,59900,74900,93900]}, cell:{11:[47900,54900,69900,88900], 13:[59900,66900,81900,100900]} },
+    nano:{ wifi:{11:{1024:66900,2048:85900}, 13:{1024:78900,2048:97900}}, cell:{11:{1024:73900,2048:92900}, 13:{1024:85900,2048:104900}} },
+    colors:[{id:"silver",name:"Silver",hex:"#e3e4e6"},{id:"spaceblack",name:"Space Black",hex:"#2d2d30"}] }
+];
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const baht = n => "฿" + Number(n).toLocaleString("en-US",{minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits:2});
+const baht2 = n => "฿" + Number(n).toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2});
+const round2 = n => Math.round(n*100)/100;
+const fmtDate = iso => new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+const expired = it => new Date(it.validUntil + "T23:59:59") < new Date();
+const byId = id => CATALOG.find(i => i.id === id);
+const famById = id => TABLETS.find(t => t.id === id);
+const gb = n => n >= 1024 ? (n/1024) + "TB" : n + "GB";
+function topUpOf(total, limit){ return Math.max(0, round2(total - (limit || ALLOWANCE))); }
+function acExtra(it){ return it.applecare ? round2(topUpOf(it.base + it.applecare) - topUpOf(it.base)) : 0; }
+function totalOf(it, applecare){ return round2(it.base + (it.applecare && applecare ? it.applecare : 0)); }
+function costBlock(total, note){
+  const t = topUpOf(total);
+  return t === 0
+    ? '<div class="cost ok"><b>Within budget</b><small>No extra cost to you' + (note ? " · " + note : "") + '</small></div>'
+    : '<div class="cost warn"><b class="num">+' + baht(t) + '</b><small>Added cost (top-up)' + (note ? " · " + note : "") + '</small></div>';
+}
+function quoteLine(it){
+  return expired(it)
+    ? '<p class="quote-meta expired">Quote ' + esc(it.quote) + ' expired ' + fmtDate(it.validUntil) + '. Price to be re-confirmed.</p>'
+    : '<p class="quote-meta">Quote ' + esc(it.quote) + ' · valid until ' + fmtDate(it.validUntil) + '</p>';
+}
+function tPrice(fam, size, conn, storage, nano){
+  if (nano && fam.nano && fam.nano[conn][size][storage]) return fam.nano[conn][size][storage];
+  return fam.price[conn][size][fam.storage.indexOf(storage)];
+}
+function tMin(fam){ return Math.min(...fam.sizes.map(s => fam.price.wifi[s][0])); }
+function estChip(price){
+  const t = topUpOf(price, TABLET_ALLOWANCE);
+  return t === 0 ? '<span class="est ok">Within budget</span>' : '<span class="est warn">May need top-up</span>';
+}
+
+/* ---------- product photos ---------- */
+function photo(src, alt){ return '<img class="photo" src="' + src + '" alt="' + esc(alt) + '" loading="lazy" decoding="async">'; }
+function artFor(it, colorId){
+  if (it.cat === "mac"){
+    const c = MAC_COLORS.find(c => c.id === colorId) || MAC_COLORS[1];
+    return photo("img/mba" + (it.screen === 15 ? 15 : 13) + "-" + c.file + ".png", it.name + " in " + c.name);
+  }
+  return photo(it.pc === "gaming" ? "img/legion-5.png" : "img/asus-expertbook-p5.png", it.name);
+}
+function tabletArt(fam, colorId){
+  const c = fam.colors.find(c => c.id === colorId) || fam.colors[0];
+  return photo("img/tab-" + fam.img + "-" + c.id + ".png", fam.name + " in " + c.name);
+}
+
+/* ---------- state ---------- */
+const state = { view:"choose", cat:null, itemId:null, applecare:false, color:"silver",
+  saved:null, savedTablet:null, orders:[], tabletOrders:[], lastOrder:null, doneKind:"computer", adminTab:"computers",
+  t:{ fam:null, size:11, conn:"wifi", storage:null, nano:false, color:null } };
+const CFG = window.ORDER_CONFIG || {};
+const ENDPOINT = String(CFG.endpoint || "").trim();
+const ALLOWED_DOMAINS = Array.isArray(CFG.allowedDomains) ? CFG.allowedDomains : [];
+const readOnly = false;
+const MY_KEY = "myChoice";
+let draft = {};
+try { draft = JSON.parse(localStorage.getItem("orderDraft") || "{}") || {}; } catch(e){ draft = {}; }
+function saveDraft(){ try { localStorage.setItem("orderDraft", JSON.stringify(draft)); } catch(e){} }
+
+/* ---------- navigation ---------- */
+function go(view, patch){
+  Object.assign(state, patch || {});
+  state.view = view;
+  render();
+  window.scrollTo(0, 0);
+}
+function crumbs(){
+  const c = $("#crumbs"); const parts = [];
+  const v = state.view;
+  if ((v === "lineup" || v === "configure") && state.cat) parts.push('<button type="button" data-go="lineup">' + (state.cat === "mac" ? "Mac" : "PC") + '</button>');
+  if (v === "configure" && state.itemId) parts.push("<span>" + esc(byId(state.itemId).name) + "</span>");
+  if (v === "tablets" || v === "tconfigure") parts.push('<button type="button" data-go="tablets">Tablet</button>');
+  if (v === "tconfigure" && state.t.fam) parts.push("<span>" + esc(famById(state.t.fam).name) + "</span>");
+  if (v === "done") parts.push("<span>Confirmed</span>");
+  c.innerHTML = parts.join('<span aria-hidden="true">›</span>');
+}
+
+/* ---------- shared form pieces ---------- */
+function topupFields(amount, limit, tentative){
+  const d = draft;
+  return '<div class="topup-box">' +
+    '<h2>Top-up budget source <span class="th">แหล่งงบประมาณสมทบ</span></h2>' +
+    (tentative
+      ? '<p>This choice may cost more than the tablet budget. If the final quotation is above the budget, which budget will cover the difference?</p>'
+      : '<p>This set costs <b class="num">' + baht2(amount) + '</b> more than the ' + baht(limit) + ' allowance. Tell us which budget will cover the difference.</p>') +
+    '<div class="field"><label for="budgetSource">Budget source <span class="req">*</span></label><textarea id="budgetSource" name="budgetSource" placeholder="e.g. research grant, department budget, personal funds">' + esc(d.budgetSource) + '</textarea></div>' +
+    '<div class="field"><label for="grantCode">Project or grant code</label><input id="grantCode" name="grantCode" value="' + esc(d.grantCode) + '" placeholder="Optional"></div>' +
+  '</div>';
+}
+function contactFields(){
+  const d = draft;
+  return '<div class="section"><h2>Your details<span class="th">ข้อมูลผู้สั่ง</span></h2>' +
+    '<div class="field"><label for="fullName">Full name <span class="req">*</span></label><input id="fullName" name="fullName" autocomplete="name" value="' + esc(d.fullName) + '"></div>' +
+    '<div class="grid2"><div class="field"><label for="email">Email <span class="req">*</span></label><input id="email" name="email" type="email" autocomplete="email" value="' + esc(d.email) + '"></div>' +
+    '<div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" value="' + esc(d.phone) + '"></div></div>' +
+    '<div class="field"><label for="notes">Notes</label><textarea id="notes" name="notes" placeholder="Anything the purchasing team should know">' + esc(d.notes) + '</textarea></div>' +
+  '</div>';
+}
+const DRAFT_FIELDS = ["budgetSource","grantCode","fullName","email","phone","notes","accessories"];
+function val(id){ const el = document.getElementById(id); return el ? (el.value || "").trim() : ""; }
+function validate(needSource){
+  const problems = [];
+  if (!val("fullName")) problems.push("your full name");
+  const em = val("email").toLowerCase();
+  if (!/^\S+@\S+\.\S+$/.test(em)) problems.push("a valid email");
+  else if (ALLOWED_DOMAINS.length && !ALLOWED_DOMAINS.some(d => em.endsWith("@" + d))) problems.push("your university email (" + ALLOWED_DOMAINS.map(d => "@" + d).join(" or ") + ")");
+  if (needSource && !val("budgetSource")) problems.push("the budget source for the top-up");
+  if (!$("#agree").checked) problems.push("the confirmation tick box");
+  return problems;
+}
+function showErr(msg){ const err = $("#formErr"); err.hidden = !msg; err.textContent = msg || ""; if (msg) err.scrollIntoView({block:"center", behavior:"smooth"}); }
+
+/* ---------- views ---------- */
+function savedBanner(){
+  let line = "";
+  if (state.saved){
+    const o = state.saved;
+    line = '<b>' + (o.category === "mac" ? "Mac" : "PC") + ':</b> ' + esc(o.itemName) + ' · ' + (o.topUp > 0 ? 'top-up <span class="num">' + baht2(o.topUp) + '</span>' : 'within budget');
+  } else if (state.savedTablet){
+    const o = state.savedTablet;
+    line = '<b>Tablet:</b> ' + esc(o.itemName) + ' · ' + (o.estTopUp > 0 ? 'may need top-up' : 'likely within budget') + ' · awaiting quotation';
+  }
+  if (!line) return "";
+  return '<div class="saved fade"><p class="eyebrow">Your current choice · choosing again replaces it</p><div class="saved-row"><p>' + line + '</p><button class="btn small ghost" type="button" data-view-saved="' + (state.saved ? "computer" : "tablet") + '">View</button></div></div>';
+}
+function viewChoose(){
+  const within = cat => CATALOG.filter(i=>i.cat===cat && topUpOf(i.base)===0).length;
+  const count = cat => CATALOG.filter(i=>i.cat===cat).length;
+  const rangeText = cat => count(cat) + " configurations · " + within(cat) + " within budget";
+  const current = state.saved ? state.saved.category : state.savedTablet ? "tablet" : null;
+  const mark = c => current === c ? '<span class="current">Your current choice</span>' : '';
+  return savedBanner() +
+  '<section class="hero fade">' +
+    '<p class="eyebrow">Faculty computer programme · 2026</p>' +
+    '<h1>Mac, PC or tablet?</h1>' +
+    '<p>Choose one of the three. <span class="th">กรุณาเลือกเพียงหนึ่งรายการ: Mac, PC หรือแท็บเล็ต</span></p>' +
+  '</section>' +
+  '<section class="choose three">' +
+    '<button type="button" class="pick fade' + (current === "mac" ? " is-current" : "") + '" data-cat="mac">' + mark("mac") + photo("img/mba13-skyblue.png", "MacBook Air") +
+      '<h2>Mac</h2><p class="sub">MacBook Air with M5 · macOS</p><p class="range num">' + rangeText("mac") + '</p><span class="cta">Choose Mac ›</span></button>' +
+    '<button type="button" class="pick fade' + (current === "pc" ? " is-current" : "") + '" data-cat="pc">' + mark("pc") + photo("img/asus-expertbook-p5.png", "Windows laptop") +
+      '<h2>PC</h2><p class="sub">Windows 11 laptops · ASUS, Lenovo</p><p class="range num">' + rangeText("pc") + '</p><span class="cta">Choose PC ›</span></button>' +
+    '<button type="button" class="pick fade' + (current === "tablet" ? " is-current" : "") + '" data-go="tablets">' + mark("tablet") + photo("img/tab-air-blue.png", "iPad") +
+      '<h2>Tablet</h2><p class="sub">iPad, iPad Air, iPad Pro</p><p class="range">Price confirmed after quotation</p><span class="cta">Choose tablet ›</span></button>' +
+  '</section>' +
+  '<p class="choose-note">Computers use the computer budget; tablets use the separate tablet budget. You can order only one item, and you can change your choice later.</p>';
+}
+function viewLineup(){
+  const items = CATALOG.filter(i => i.cat === state.cat).slice().sort((a,b)=>a.base-b.base);
+  const isMac = state.cat === "mac";
+  return '<section class="lineup-head fade">' +
+    '<p class="eyebrow">' + (isMac ? "Mac" : "PC") + ' lineup</p>' +
+    '<h1>' + (isMac ? "Which MacBook Air is right for you?" : "Which PC is right for you?") + '</h1>' +
+    '<p>Sets marked <b>Within budget</b> are fully covered by the faculty allowance. For the others, the amount shown is the extra cost you top up from another budget, which you name on the next step.' +
+    (isMac ? ' AppleCare+ is an optional add-on on the next step.' : '') + '</p>' +
+  '</section><section class="cards">' +
+  items.map(it => {
+    const total = totalOf(it, false);
+    return '<article class="card fade">' + artFor(it, "silver") +
+      '<div><p class="eyebrow">' + esc(it.tag) + '</p><h3>' + esc(it.name) + (it.model ? ' <span class="th">' + esc(it.model) + '</span>' : '') + '</h3><p class="chip">' + esc(it.chip) + '</p></div>' +
+      '<div class="hl">' + it.hl.map(h => '<div><b>' + esc(h[0]) + '</b><span>' + esc(h[1]) + '</span></div>').join("") + '</div>' +
+      costBlock(total, it.applecare ? "without AppleCare+" : "") +
+      '<div class="spacer"></div>' + quoteLine(it) +
+      '<button class="btn" type="button" data-item="' + it.id + '">Select</button>' +
+    '</article>';
+  }).join("") + '</section>';
+}
+function viewConfigure(){
+  const it = byId(state.itemId);
+  const isMac = it.cat === "mac";
+  return '<div class="config">' +
+    '<div class="stage">' +
+      '<div class="stage-art" id="stageArt">' + artFor(it, state.color) + '</div>' +
+      '<div class="specs"><h3>Specifications <span class="th">รายละเอียด</span></h3><ul>' + it.specs.map(s => '<li>' + esc(s) + '</li>').join("") + '</ul></div>' +
+      '<p class="quote-meta">Vendor: ' + esc(it.vendor) + ' · Quote ' + esc(it.quote) + ' dated ' + fmtDate(it.quoteDate) + '</p>' +
+    '</div>' +
+    '<form class="panel" id="orderForm" novalidate>' +
+      '<div><p class="eyebrow">' + esc(it.tag) + '</p><h1>Confirm ' + esc(it.name) + '</h1><p class="chip" style="color:var(--muted)">' + esc(it.chip) + '</p></div>' +
+      (expired(it) ? '<p class="notice bad">This quotation expired on ' + fmtDate(it.validUntil) + '. You can still confirm your choice; the purchasing team will re-confirm the price with the vendor.</p>' : '') +
+      (isMac ?
+      '<div class="section"><h2>Colour<span class="th">สี</span></h2><div class="swatches">' +
+        MAC_COLORS.map(c => '<label class="sw"><input type="radio" name="color" value="' + c.id + '"' + (state.color===c.id?" checked":"") + '><i style="background:' + c.hex + '"></i>' + c.name + '</label>').join("") +
+      '</div><p class="hint">Colour is a preference and depends on vendor stock.</p></div>' +
+      '<div class="section"><h2>Optional add-on<span class="th">ตัวเลือกเพิ่มเติม</span></h2><div class="opts">' +
+        '<label class="opt"><input type="checkbox" name="applecare" id="applecare"' + (state.applecare?" checked":"") + '><span class="t"><b>Add AppleCare+ (3 years)</b><span>' + APPLECARE_NOTE + ' Without it, the standard 1-year warranty applies.</span></span><span class="p num" id="acCost"></span></label>' +
+      '</div></div>' : '') +
+      '<div class="section"><h2>Cost<span class="th">ค่าใช้จ่าย</span></h2><div class="summary" id="summary"></div></div>' +
+      '<div id="topupWrap"></div>' +
+      contactFields() +
+      '<label class="check"><input type="checkbox" id="agree"> <span id="agreeText"></span></label>' +
+      '<p class="err" id="formErr" hidden></p>' +
+      '<p class="notice" id="dbNotice" hidden></p>' +
+    '</form>' +
+  '</div>';
+}
+
+/* ---------- tablet views ---------- */
+function viewTablets(){
+  return '<section class="lineup-head fade">' +
+    '<p class="eyebrow">Tablet · separate tablet budget</p>' +
+    '<h1>Which iPad is right for you?</h1>' +
+    '<p>Choose a model and configuration. We will use your choice to request a quotation from the distributor, then confirm the final price with you.</p>' +
+  '</section>' +
+  '<div class="estimate-banner fade"><b>Prices not confirmed yet.</b> “Within budget” and “May need top-up” are estimates from a catalog. The distributor’s quotation may differ.</div>' +
+  '<section class="cards">' +
+  TABLETS.map(f => {
+    const min = tMin(f);
+    const within = topUpOf(min, TABLET_ALLOWANCE) === 0;
+    const sizes = f.sizes.map(s => s + "″").join(" or ");
+    return '<article class="card fade">' + tabletArt(f, f.colors[0].id) +
+      '<div><p class="eyebrow">' + esc(f.tag) + '</p><h3>' + esc(f.name) + '</h3><p class="chip">' + esc(f.chip) + ' · ' + sizes + '</p></div>' +
+      '<p class="blurb">' + esc(f.blurb) + '</p>' +
+      '<div class="hl"><div><b>' + sizes + '</b><span>display</span></div><div><b>' + gb(f.storage[0]) + '–' + gb(f.storage[f.storage.length-1]) + '</b><span>storage</span></div><div><b>' + f.colors.length + '</b><span>colours</span></div></div>' +
+      (within
+        ? '<div class="cost ok"><b>Options within budget</b><small>Estimate · larger configurations may need a top-up</small></div>'
+        : '<div class="cost warn"><b>May need top-up</b><small>Estimate · all configurations are likely above the tablet budget</small></div>') +
+      '<div class="spacer"></div>' +
+      '<button class="btn" type="button" data-fam="' + f.id + '">Choose ' + esc(f.name) + '</button>' +
+    '</article>';
+  }).join("") + '</section>';
+}
+function tCurrent(){
+  const t = state.t, fam = famById(t.fam);
+  const price = tPrice(fam, t.size, t.conn, t.storage, t.nano);
+  return {fam, t, price, topUp: topUpOf(price, TABLET_ALLOWANCE)};
+}
+function tOptionsHTML(){
+  const {fam, t} = tCurrent();
+  const radio = (name, value, checked, label, sub, right) =>
+    '<label class="tile"><input type="radio" name="' + name + '" value="' + value + '"' + (checked ? " checked" : "") + '><span class="tt"><b>' + label + '</b>' + (sub ? '<span>' + sub + '</span>' : '') + '</span>' + (right || '') + '</label>';
+  let h = '';
+  if (fam.sizes.length > 1){
+    h += '<div class="section"><h2>Size<span class="th">ขนาดหน้าจอ</span></h2><div class="tiles two">' +
+      fam.sizes.map(s => radio("tsize", s, t.size === s, s + "-inch", s === 11 ? "Most portable" : "Largest display", estChip(tPrice(fam, s, t.conn, t.storage, t.nano)))).join("") + '</div></div>';
+  }
+  h += '<div class="section"><h2>Connectivity<span class="th">การเชื่อมต่อ</span></h2><div class="tiles two">' +
+    radio("tconn", "wifi", t.conn === "wifi", "Wi-Fi", "Connects over Wi-Fi", estChip(tPrice(fam, t.size, "wifi", t.storage, t.nano))) +
+    radio("tconn", "cell", t.conn === "cell", "Wi-Fi + Cellular", "Adds a mobile data connection", estChip(tPrice(fam, t.size, "cell", t.storage, t.nano))) +
+  '</div></div>';
+  h += '<div class="section"><h2>Storage<span class="th">พื้นที่จัดเก็บข้อมูล</span></h2><div class="tiles">' +
+    fam.storage.map(s => radio("tstorage", s, t.storage === s, gb(s), "", estChip(tPrice(fam, t.size, t.conn, s, t.nano && s >= 1024)))).join("") + '</div></div>';
+  if (fam.nano){
+    const nanoOk = t.storage >= 1024;
+    h += '<div class="section"><h2>Display glass<span class="th">กระจกหน้าจอ</span></h2><div class="tiles two">' +
+      radio("tnano", "std", !t.nano, "Standard glass", "", estChip(tPrice(fam, t.size, t.conn, t.storage, false))) +
+      (nanoOk
+        ? radio("tnano", "nano", t.nano, "Nano-texture glass", "Reduces glare", estChip(tPrice(fam, t.size, t.conn, t.storage, true)))
+        : '<div class="tile disabled"><span class="tt"><b>Nano-texture glass</b><span>Available with 1TB or 2TB</span></span></div>') +
+    '</div></div>';
+  }
+  h += '<div class="section"><h2>Colour<span class="th">สี</span></h2><div class="swatches">' +
+    fam.colors.map(c => '<label class="sw"><input type="radio" name="tcolor" value="' + c.id + '"' + (t.color===c.id?" checked":"") + '><i style="background:' + c.hex + '"></i>' + c.name + '</label>').join("") +
+  '</div></div>';
+  return h;
+}
+function viewTConfigure(){
+  const {fam, t} = tCurrent();
+  const d = draft;
+  return '<div class="config">' +
+    '<div class="stage">' +
+      '<div class="stage-art" id="stageArt">' + tabletArt(fam, t.color) + '</div>' +
+      '<div class="estimate-banner"><b>Estimate only.</b> Budget status comes from a catalog. We will request a quotation from the distributor and confirm the final price with you before ordering.</div>' +
+    '</div>' +
+    '<form class="panel" id="orderForm" novalidate>' +
+      '<div><p class="eyebrow">Tablet request</p><h1>Choose your ' + esc(fam.name) + '</h1><p class="chip" style="color:var(--muted)">' + esc(fam.chip) + '</p></div>' +
+      '<div id="tOpts">' + tOptionsHTML() + '</div>' +
+      '<div class="section"><h2>Estimated cost<span class="th">ค่าใช้จ่ายโดยประมาณ</span></h2><div class="summary" id="summary"></div></div>' +
+      '<div id="topupWrap"></div>' +
+      '<div class="section"><h2>Accessories<span class="th">อุปกรณ์เสริม</span></h2>' +
+        '<div class="field"><label for="accessories">Accessories to include in the quotation request</label><input id="accessories" name="accessories" value="' + esc(d.accessories) + '" placeholder="Optional, e.g. Apple Pencil Pro, Magic Keyboard"><span class="hint">Accessories are not in the catalog, so they are not part of the estimate.</span></div>' +
+      '</div>' +
+      contactFields() +
+      '<label class="check"><input type="checkbox" id="agree"> <span id="agreeText"></span></label>' +
+      '<p class="err" id="formErr" hidden></p>' +
+      '<p class="notice" id="dbNotice" hidden></p>' +
+    '</form>' +
+  '</div>';
+}
+
+/* ---------- done + admin ---------- */
+function receiptHTML(o){
+  return '<div class="receipt">' +
+    '<div class="row"><span>Computer</span><b style="text-align:right">' + esc(o.itemName) + '</b></div>' +
+    (o.color ? '<div class="row"><span>Colour</span><span>' + esc(o.color) + '</span></div>' : '') +
+    (o.category === "mac" ? '<div class="row"><span>AppleCare+</span><span>' + (o.applecare ? "Included" : "Not included") + '</span></div>' : '') +
+    (o.topUp > 0
+      ? '<div class="row topup"><span>Added cost (top-up)</span><span class="num">' + baht2(o.topUp) + '</span></div><div class="row"><span>Budget source</span><span style="text-align:right">' + esc(o.budgetSource) + (o.grantCode ? " (" + esc(o.grantCode) + ")" : "") + '</span></div>'
+      : '<div class="row ok"><span>Status</span><span>Within budget</span></div>') +
+    '<div class="row"><span>Ordered by</span><span style="text-align:right">' + esc(o.fullName) + '</span></div>' +
+    '<p class="ref">Quote ' + esc(o.quoteRef) + ' · submitted ' + new Date(o.updatedAt).toLocaleString("en-GB") + '</p>' +
+  '</div>';
+}
+function tabletReceiptHTML(o){
+  return '<div class="receipt">' +
+    '<div class="row"><span>Tablet</span><b style="text-align:right">' + esc(o.itemName) + '</b></div>' +
+    '<div class="row"><span>Colour</span><span>' + esc(o.color) + '</span></div>' +
+    (o.accessories ? '<div class="row"><span>Accessories to quote</span><span style="text-align:right">' + esc(o.accessories) + '</span></div>' : '') +
+    (o.estTopUp > 0
+      ? '<div class="row topup"><span>Budget</span><span>May need top-up</span></div><div class="row"><span>Budget source</span><span style="text-align:right">' + esc(o.budgetSource) + (o.grantCode ? " (" + esc(o.grantCode) + ")" : "") + '</span></div>'
+      : '<div class="row ok"><span>Budget</span><span>Likely within budget</span></div>') +
+    '<div class="row"><span>Status</span><span class="pending-note"><span class="dot" aria-hidden="true"></span>Awaiting quotation</span></div>' +
+    '<div class="row"><span>Requested by</span><span style="text-align:right">' + esc(o.fullName) + '</span></div>' +
+    '<p class="ref">Estimate from catalog · submitted ' + new Date(o.updatedAt).toLocaleString("en-GB") + '</p>' +
+  '</div>';
+}
+function viewDone(){
+  const tablet = state.doneKind === "tablet";
+  const o = tablet ? state.savedTablet : (state.lastOrder || state.saved);
+  if (!o) return viewChoose();
+  return '<section class="done fade">' +
+    '<div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>' +
+    (tablet
+      ? '<h1>Your tablet request is in</h1><p style="color:var(--muted)">We will request a quotation from the distributor and contact you to confirm the final price. <span class="th">ระบบได้บันทึกคำขอของคุณแล้ว</span></p>' + tabletReceiptHTML(o)
+      : '<h1>Your order is confirmed</h1><p style="color:var(--muted)">The purchasing team has your selection. <span class="th">ระบบได้บันทึกการยืนยันของคุณแล้ว</span></p>' + receiptHTML(o)) +
+    '<div class="actions">' +
+      '<button class="btn ghost" type="button" data-change="' + (tablet ? "tablet" : "computer") + '">' + (tablet ? "Change my tablet request" : "Change my order") + '</button>' +
+      '<button class="btn ghost" type="button" data-go="choose">Choose Mac, PC or tablet instead</button>' +
+    '</div>' +
+  '</section>';
+}
+/* ---------- configure behaviour (computer) ---------- */
+function currentTotals(){
+  const it = byId(state.itemId);
+  const total = totalOf(it, state.applecare);
+  return {it, total, topUp: topUpOf(total)};
+}
+function setTopup(amount, limit, tentative){
+  const wrap = $("#topupWrap"); if (!wrap) return;
+  if (amount > 0){
+    if (!wrap.firstChild) wrap.innerHTML = topupFields(amount, limit, tentative);
+    else wrap.querySelector("p").innerHTML = topupFields(amount, limit, tentative).match(/<p>([\s\S]*?)<\/p>/)[1];
+  } else {
+    wrap.innerHTML = "";
+  }
+}
+function updateSummary(){
+  const {it, topUp} = currentTotals();
+  const s = $("#summary"); if (!s) return;
+  s.innerHTML =
+    '<div class="row"><span>' + esc(it.name) + '</span><span>' + (topUpOf(it.base) > 0 ? '<span class="num">+' + baht2(topUpOf(it.base)) + '</span>' : 'Covered by allowance') + '</span></div>' +
+    (it.applecare && state.applecare ? '<div class="row"><span>AppleCare+ (3 years)</span><span>' + (acExtra(it) > 0 ? '<span class="num">+' + baht2(acExtra(it)) + '</span>' : 'Covered by allowance') + '</span></div>' : '') +
+    (topUp > 0 ? '<div class="row topup total"><span>Added cost (top-up)</span><span class="num">' + baht2(topUp) + '</span></div>'
+               : '<div class="row ok total"><span>Within budget</span><span>No extra cost</span></div>');
+  const ac = $("#acCost");
+  if (ac){ const x = acExtra(it); ac.textContent = x > 0 ? "+" + baht(x) : "Within budget"; ac.style.color = x > 0 ? "var(--warn)" : "var(--ok)"; }
+  setTopup(topUp, ALLOWANCE, false);
+  $("#agreeText").textContent = "I confirm this is the computer set I want the faculty to order for me" + (topUp > 0 ? " and that I will cover the top-up from the budget named above." : ".");
+  renderBar();
+}
+
+/* ---------- configure behaviour (tablet) ---------- */
+function updateTSummary(){
+  const {fam, t, topUp} = tCurrent();
+  const s = $("#summary"); if (!s) return;
+  const color = (fam.colors.find(c => c.id === t.color) || {}).name;
+  s.innerHTML =
+    '<div class="row"><span>' + esc(tabletName()) + '</span><span>' + esc(color) + '</span></div>' +
+    (topUp > 0 ? '<div class="row topup total"><span>Budget</span><span>May need top-up</span></div>'
+               : '<div class="row ok total"><span>Budget</span><span>Likely within budget</span></div>') +
+    '<p class="hint">Estimate only. The final price comes from the distributor’s quotation.</p>';
+  setTopup(topUp, TABLET_ALLOWANCE, true);
+  $("#agreeText").textContent = "I understand this is an estimate. Please request a quotation for this tablet and confirm the final price with me" + (topUp > 0 ? "; I will cover any amount above the allowance from the budget named above." : ".");
+  renderBar();
+}
+function tabletName(){
+  const {fam, t} = tCurrent();
+  return fam.name + " " + t.size + "″ " + (t.conn === "cell" ? "Wi-Fi + Cellular" : "Wi-Fi") + " " + gb(t.storage) + (t.nano ? " · Nano-texture" : "");
+}
+function bindTConfigure(){
+  const f = $("#orderForm");
+  f.addEventListener("submit", e => { e.preventDefault(); submitTablet(); });
+  f.addEventListener("change", e => {
+    const t = state.t, n = e.target.name;
+    if (!["tsize","tconn","tstorage","tnano","tcolor"].includes(n)) return;
+    if (n === "tsize") t.size = Number(e.target.value);
+    if (n === "tconn") t.conn = e.target.value;
+    if (n === "tstorage"){ t.storage = Number(e.target.value); if (t.storage < 1024) t.nano = false; }
+    if (n === "tnano") t.nano = e.target.value === "nano";
+    if (n === "tcolor"){ t.color = e.target.value; $("#stageArt").innerHTML = tabletArt(famById(t.fam), t.color); }
+    const keep = n + "=" + e.target.value;
+    $("#tOpts").innerHTML = tOptionsHTML();
+    const back = f.querySelector('input[name="' + keep.split("=")[0] + '"][value="' + keep.split("=")[1] + '"]');
+    if (back) back.focus({preventScroll:true});
+    updateTSummary();
+  });
+  f.addEventListener("input", e => { if (DRAFT_FIELDS.includes(e.target.id)){ draft[e.target.id] = e.target.value; saveDraft(); } });
+  updateTSummary();
+  dbNotice();
+}
+
+/* ---------- bottom bar ---------- */
+function renderBar(){
+  const bar = $("#bar");
+  if (state.view === "configure"){
+    const {it, topUp} = currentTotals();
+    bar.hidden = false;
+    bar.innerHTML = '<div class="bar-in"><div class="what">' + (topUp > 0 ? '<b class="num" style="color:var(--warn)">+' + baht2(topUp) + ' added cost</b>' : '<b style="color:var(--ok)">Within budget</b>') + esc(it.name) + (it.applecare && state.applecare ? ' + AppleCare+' : '') + '</div>' +
+      '<button class="btn" type="button" id="submitBtn"' + (readOnly ? " disabled" : "") + '>' + (state.saved ? "Update order" : "Confirm order") + '</button></div>';
+    $("#submitBtn").addEventListener("click", submitOrder);
+  } else if (state.view === "tconfigure"){
+    const {topUp} = tCurrent();
+    bar.hidden = false;
+    bar.innerHTML = '<div class="bar-in"><div class="what">' + (topUp > 0 ? '<b style="color:var(--warn)">May need top-up</b>' : '<b style="color:var(--ok)">Likely within budget</b>') + esc(tabletName()) + ' · quotation pending</div>' +
+      '<button class="btn" type="button" id="submitBtn"' + (readOnly ? " disabled" : "") + '>' + (state.savedTablet ? "Update request" : "Send request") + '</button></div>';
+    $("#submitBtn").addEventListener("click", submitTablet);
+  } else { bar.hidden = true; bar.innerHTML = ""; }
+}
+function bindConfigure(){
+  const f = $("#orderForm");
+  f.addEventListener("submit", e => { e.preventDefault(); submitOrder(); });
+  f.addEventListener("change", e => {
+    if (e.target.name === "applecare"){ state.applecare = e.target.checked; updateSummary(); }
+    if (e.target.name === "color"){ state.color = e.target.value; $("#stageArt").innerHTML = artFor(byId(state.itemId), state.color); }
+  });
+  f.addEventListener("input", e => { if (DRAFT_FIELDS.includes(e.target.id)){ draft[e.target.id] = e.target.value; saveDraft(); } });
+  updateSummary();
+  dbNotice();
+}
+function dbNotice(){
+  const n = $("#dbNotice"); if (!n) return;
+  if (!ENDPOINT){ n.hidden = false; n.textContent = "Ordering is not connected yet: the web app address is missing from config.js."; return; }
+  n.hidden = true;
+}
+function contactData(){ return { fullName: val("fullName"), email: val("email"), phone: val("phone"), notes: val("notes") }; }
+async function save(path, doc, label, onDone){
+  if (!ENDPOINT){ dbNotice(); showErr("This " + label + " was not saved."); return; }
+  showErr("");
+  const btn = $("#submitBtn"); if (btn){ btn.disabled = true; btn.textContent = "Saving…"; }
+  const payload = Object.assign({}, doc, path === "orders"
+    ? { kind: "computer" }
+    : { kind: "tablet", connectivity: doc.connCode, storageGB: doc.storageGB });
+  try {
+    // text/plain keeps this a "simple" request, which Apps Script accepts from any site.
+    const res = await fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(payload) });
+    const out = await res.json();
+    if (!out.ok) throw new Error(out.error || "The order was not accepted.");
+    Object.assign(doc, { updatedAt: out.updatedAt, submittedAt: out.submittedAt });
+    if (path === "orders"){ doc.total = out.total; doc.topUp = out.topUp; state.savedTablet = null; }
+    else { doc.estTopUp = out.estTopUp; state.saved = null; }
+    try { localStorage.setItem(MY_KEY, JSON.stringify({ kind: path, doc })); } catch(e){}
+    onDone(doc);
+  } catch(e){
+    showErr(e && e.message && !/fetch|network|json/i.test(e.message)
+      ? e.message
+      : "The " + label + " could not be saved. Check your internet connection and try again.");
+    renderBar();
+  }
+}
+function submitOrder(){
+  const {it, total, topUp} = currentTotals();
+  const problems = validate(topUp > 0);
+  if (problems.length) return showErr("Please fill in " + problems.join(", ") + ".");
+  const now = new Date().toISOString();
+  const color = it.cat === "mac" ? (MAC_COLORS.find(c=>c.id===state.color) || {}).name : "";
+  save("orders", Object.assign({
+    itemId: it.id, itemName: it.name + (it.model ? " " + it.model : "") + " (" + it.chip + ", " + it.hl.slice(0,2).map(h=>h[0]).join("/") + ")",
+    category: it.cat, applecare: !!(it.applecare && state.applecare), color: color || "",
+    total, topUp, withinBudget: topUp === 0, allowance: ALLOWANCE,
+    budgetSource: topUp > 0 ? val("budgetSource") : "", grantCode: topUp > 0 ? val("grantCode") : "",
+    vendor: it.vendor, quoteRef: it.quote,
+    submittedAt: state.saved && state.saved.submittedAt ? state.saved.submittedAt : now, updatedAt: now
+  }, contactData()), "order", doc => { state.saved = doc; state.lastOrder = doc; go("done", {doneKind:"computer"}); });
+}
+function submitTablet(){
+  const {fam, t, price, topUp} = tCurrent();
+  const problems = validate(topUp > 0);
+  if (problems.length) return showErr("Please fill in " + problems.join(", ") + ".");
+  const now = new Date().toISOString();
+  save("tablets", Object.assign({
+    family: fam.id, itemName: tabletName(), chip: fam.chip, size: t.size, connectivity: t.conn === "cell" ? "Wi-Fi + Cellular" : "Wi-Fi",
+    storage: gb(t.storage), nanoTexture: !!t.nano, color: (fam.colors.find(c => c.id === t.color) || {}).name || "",
+    estPrice: price, estTopUp: topUp, estWithinBudget: topUp === 0, allowance: TABLET_ALLOWANCE, priceSource: TABLET_SOURCE,
+    connCode: t.conn, storageGB: t.storage, status: "awaiting quotation", accessories: val("accessories"),
+    budgetSource: topUp > 0 ? val("budgetSource") : "", grantCode: topUp > 0 ? val("grantCode") : "",
+    submittedAt: state.savedTablet && state.savedTablet.submittedAt ? state.savedTablet.submittedAt : now, updatedAt: now
+  }, contactData()), "request", doc => { state.savedTablet = doc; go("done", {doneKind:"tablet"}); });
+}
+
+/* ---------- render ---------- */
+function render(){
+  const app = $("#app");
+  const v = state.view;
+  app.innerHTML = v === "lineup" ? viewLineup() : v === "configure" ? viewConfigure() : v === "tablets" ? viewTablets()
+    : v === "tconfigure" ? viewTConfigure() : v === "done" ? viewDone() : viewChoose();
+  crumbs();
+  if (v === "configure") bindConfigure(); else if (v === "tconfigure") bindTConfigure(); else renderBar();
+}
+function openTablet(famId){
+  const fam = famById(famId);
+  const s = state.savedTablet && state.savedTablet.family === famId ? state.savedTablet : null;
+  const color = s ? ((fam.colors.find(c => c.name === s.color) || fam.colors[0]).id) : fam.colors[0].id;
+  const storage = s ? fam.storage.find(x => gb(x) === s.storage) || fam.storage[0] : fam.storage[0];
+  go("tconfigure", {t:{ fam: famId, size: s ? s.size : fam.sizes[0], conn: s && s.connectivity === "Wi-Fi + Cellular" ? "cell" : "wifi",
+    storage, nano: s ? !!s.nanoTexture : false, color }});
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-cat],[data-item],[data-go],[data-view-saved],[data-change],[data-fam],[data-admin-tab]");
+  if (!t) return;
+  if (t.dataset.cat) go("lineup", {cat:t.dataset.cat});
+  else if (t.dataset.item){
+    const it = byId(t.dataset.item);
+    const keep = state.saved && state.saved.itemId === it.id;
+    go("configure", {itemId:it.id, applecare: keep ? !!state.saved.applecare : false,
+      color: keep ? ((MAC_COLORS.find(c=>c.name===state.saved.color)||{}).id || "silver") : state.color});
+  }
+  else if (t.dataset.fam) openTablet(t.dataset.fam);
+  else if (t.dataset.adminTab) go("admin", {adminTab: t.dataset.adminTab});
+  else if (t.dataset.go) go(t.dataset.go, t.dataset.go === "choose" ? {cat:null} : null);
+  else if (t.dataset.viewSaved) go("done", {doneKind: t.dataset.viewSaved, lastOrder: state.saved});
+  else if (t.dataset.change === "tablet") state.savedTablet && state.savedTablet.family ? openTablet(state.savedTablet.family) : go("tablets");
+  else if (t.dataset.change) go("lineup", {cat: (state.lastOrder || state.saved || {}).category || "mac"});
+});
+$("#homeBtn").addEventListener("click", () => go("choose", {cat:null, itemId:null}));
+
+/* ---------- start ---------- */
+try {
+  const mine = JSON.parse(localStorage.getItem(MY_KEY) || "null");
+  if (mine && mine.doc){ if (mine.kind === "orders") state.saved = mine.doc; else state.savedTablet = mine.doc; }
+} catch(e){}
+render();
+})();
+</script>
+
+</body>
+</html>
