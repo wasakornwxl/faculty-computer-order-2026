@@ -25,6 +25,8 @@ const COMPUTERS = {
   "mba13-m5-8g-16-512":     { platform: "Mac", name: "MacBook Air 13″ (M5 10-core CPU / 8-core GPU, 16GB, 512GB, Thai keyboard)", base: 43900,    applecare: 6848, vendor: "COM7", quote: "01QTS/26091123" },
   "mba13-m5-10g-24-1tb":    { platform: "Mac", name: "MacBook Air 13″ (M5 10-core CPU / 10-core GPU, 24GB, 1TB, Thai keyboard)", base: 60700,   applecare: 6848, vendor: "COM7", quote: "01QTS/26091119" },
   "mba13-m5-10g-16-2tb-us": { platform: "Mac", name: "MacBook Air 13″ (M5 10-core CPU / 10-core GPU, 16GB, 2TB, US keyboard)", base: 69496.50, applecare: 6848, vendor: "COM7", quote: "01QTS/26091396" },
+  // Price not confirmed yet (no quotation): always treated as a top-up, amounts recorded as "TBC".
+  "mba13-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 13″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", tbc: true, applecare: 6848, vendor: "To be confirmed", quote: "Pending" },
   "mba15-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 15″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", base: 77000,   applecare: 7811, vendor: "COM7", quote: "01QTS/26091115" },
   "asus-expertbook-p5":     { platform: "PC",  name: "ASUS ExpertBook P5 P5405CSA (Core Ultra 7 258V, 32GB, 1TB)", base: 49969, vendor: "Inforgen Data System", quote: "260617-09" },
   "lenovo-legion5":         { platform: "PC",  name: "Lenovo Legion 5 15IAX11 (Core Ultra 9 290HX Plus, RTX 5070, 16GB, 512GB)", base: 79715, vendor: "COM7", quote: "01QTS/26090061" }
@@ -49,7 +51,11 @@ const TABLETS = {
     colours: ["Silver", "Space Black"] },
   s11: { name: "Samsung Galaxy Tab S11", chip: "", cellLabel: "Wi-Fi + 5G", sizes: [11], storage: [128, 256],
     price: { wifi: { 11: [28900, 32900] }, cell: { 11: [33900, 37900] } },
-    colours: ["Gray", "Silver"] }
+    colours: ["Gray", "Silver"] },
+  // Microsoft Surface Thailand estimated retail price (surfacethai.net), VAT incl., checked 27 Sep 2026. Wi-Fi only.
+  surface: { name: "Microsoft Surface Pro", chip: "", sizes: [12], storage: [256, 512],
+    price: { wifi: { 12: [31590, 34590] } },
+    colours: ["Platinum"] }
 };
 
 const SHEETS = {
@@ -137,6 +143,18 @@ function doPost(e) {
 function computerRecord(d) {
   const it = COMPUTERS[d.itemId];
   if (!it) throw new Error("Unknown computer. Reload the page and choose again.");
+  if (it.tbc) {
+    const src = clean(d.budgetSource, 500);
+    if (!src) throw new Error("Please fill in the budget source for the top-up.");
+    const ac = !!(it.applecare && d.applecare);
+    const col = MAC_COLOURS.indexOf(d.color) >= 0 ? d.color : "Silver";
+    return {
+      cells: [it.platform, it.name, col, ac ? "Yes" : "No", "TBC", "TBC", src, clean(d.grantCode, 100), it.vendor, it.quote, clean(d.notes, 1000), d.itemId],
+      summary: it.name + (ac ? " + AppleCare+" : "") + " (price TBC)",
+      budgetLine: "Top-up (amount TBC) from: " + src,
+      reply: { total: null, topUp: null, tbc: true }
+    };
+  }
   const applecare = !!(it.applecare && d.applecare);
   const colour = it.platform === "Mac" ? (MAC_COLOURS.indexOf(d.color) >= 0 ? d.color : "Silver") : "";
   const total = round2(it.base + (applecare ? it.applecare : 0));
@@ -157,6 +175,7 @@ function tabletRecord(d) {
   if (!fam) throw new Error("Unknown tablet. Reload the page and choose again.");
   const size = Number(d.size), storage = Number(d.storageGB);
   const conn = d.connectivity === "cell" ? "cell" : "wifi";
+  if (!fam.price[conn]) throw new Error("That tablet configuration is not available.");
   if (fam.sizes.indexOf(size) < 0 || fam.storage.indexOf(storage) < 0) throw new Error("That tablet configuration is not available.");
   const nano = !!(d.nanoTexture && fam.nano && storage >= 1024);
   const price = nano ? fam.nano[conn][size][storage] : fam.price[conn][size][fam.storage.indexOf(storage)];

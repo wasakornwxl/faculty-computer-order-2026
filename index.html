@@ -284,6 +284,11 @@ const CATALOG = [
     hl:[["16GB","memory"],["2TB","SSD"],["US","keyboard"]],
     specs:["M5 chip: 10-core CPU, 10-core GPU, 16-core Neural Engine","16GB unified memory","2TB SSD storage","13.6-inch Liquid Retina display","Backlit Magic Keyboard with Touch ID (U.S. English)","2× Thunderbolt 4, MagSafe 3, Wi-Fi 7, Bluetooth 6","1-year warranty"],
     base:69496.50, applecare:6848, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26091396", quoteDate:"2026-09-25", validUntil:"2026-10-25", screen:13 },
+  { id:"mba13-m5-10g-32-1tb", cat:"mac", name:"MacBook Air 13″", tag:"Most memory", tbc:true, sortKey:69400,
+    chip:"M5 · 10-core CPU · 10-core GPU",
+    hl:[["32GB","memory"],["1TB","SSD"],["Thai","keyboard"]],
+    specs:["M5 chip: 10-core CPU, 10-core GPU, 16-core Neural Engine","32GB unified memory","1TB SSD storage","13.6-inch Liquid Retina display","35W Dual USB-C Port power adapter","Backlit Magic Keyboard with Touch ID (Thai)","2× Thunderbolt 4, MagSafe 3, Wi-Fi 7, Bluetooth 6","1-year warranty"],
+    base:null, applecare:6848, vendor:"To be confirmed", quote:"Pending", screen:13 },
   { id:"mba15-m5-10g-32-1tb", cat:"mac", name:"MacBook Air 15″", tag:"Bigger screen",
     chip:"M5 · 10-core CPU · 10-core GPU",
     hl:[["32GB","memory"],["1TB","SSD"],["15.3″","display"]],
@@ -325,7 +330,14 @@ const TABLETS = [
     source:"Samsung Thailand online store (samsung.com/th), regular price, VAT included",
     sizes:[11], storage:[128,256],
     price:{ wifi:{11:[28900,32900]}, cell:{11:[33900,37900]} },
-    colors:[{id:"gray",name:"Gray",hex:"#6d6f73"},{id:"silver",name:"Silver",hex:"#dfe1e4"}] }
+    colors:[{id:"gray",name:"Gray",hex:"#6d6f73"},{id:"silver",name:"Silver",hex:"#dfe1e4"}] },
+  { id:"surface", name:"Microsoft Surface Pro", chip:"Windows 11 · Snapdragon X Plus · 16GB memory", tag:"Windows", img:"surface",
+    blurb:"A 12-inch Windows 11 tablet (Copilot+ PC) that runs full desktop apps. Keyboard and pen are sold separately.",
+    note:"The Surface Keyboard, Slim Pen and charger are not included. If you need them, list them under Accessories so we can add them to the quotation request.",
+    source:"Microsoft Surface Thailand estimated retail price (surfacethai.net), VAT included",
+    sizes:[12], storage:[256,512],
+    price:{ wifi:{12:[31590,34590]} },
+    colors:[{id:"platinum",name:"Platinum",hex:"#dcdcdc"}] }
 ];
 
 /* ---------- helpers ---------- */
@@ -335,7 +347,7 @@ const baht = n => "฿" + Number(n).toLocaleString("en-US",{minimumFractionDigit
 const baht2 = n => "฿" + Number(n).toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2});
 const round2 = n => Math.round(n*100)/100;
 const fmtDate = iso => new Date(iso + (iso.length === 10 ? "T00:00:00" : "")).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
-const expired = it => new Date(it.validUntil + "T23:59:59") < new Date();
+const expired = it => !!it.validUntil && new Date(it.validUntil + "T23:59:59") < new Date();
 const byId = id => CATALOG.find(i => i.id === id);
 const famById = id => TABLETS.find(t => t.id === id);
 const gb = n => n >= 1024 ? (n/1024) + "TB" : n + "GB";
@@ -348,7 +360,9 @@ function costBlock(total, note){
     ? '<div class="cost ok"><b>Within budget</b><small>No extra cost to you' + (note ? " · " + note : "") + '</small></div>'
     : '<div class="cost warn"><b class="num">+' + baht(t) + '</b><small>Added cost (top-up)' + (note ? " · " + note : "") + '</small></div>';
 }
+function tbcBlock(){ return '<div class="cost warn"><b>Top-up · price TBC</b><small>Above the allowance · quotation pending</small></div>'; }
 function quoteLine(it){
+  if (it.tbc) return '<p class="quote-meta">Quotation pending · price to be confirmed</p>';
   return expired(it)
     ? '<p class="quote-meta expired">Quote ' + esc(it.quote) + ' expired ' + fmtDate(it.validUntil) + '. Price to be re-confirmed.</p>'
     : '<p class="quote-meta">Quote ' + esc(it.quote) + ' · valid until ' + fmtDate(it.validUntil) + '</p>';
@@ -413,7 +427,9 @@ function topupFields(amount, limit, tentative){
   const d = draft;
   return '<div class="topup-box">' +
     '<h2>Top-up budget source <span class="th">แหล่งงบประมาณสมทบ</span></h2>' +
-    (tentative
+    (tentative === "tbc"
+      ? '<p>The price of this set is not confirmed yet, but it is above the ' + baht(limit) + ' allowance. Tell us which budget will cover the top-up.</p>'
+      : tentative
       ? '<p>This choice may cost more than the tablet budget. If the final quotation is above the budget, which budget will cover the difference?</p>'
       : '<p>This set costs <b class="num">' + baht2(amount) + '</b> more than the ' + baht(limit) + ' allowance. Tell us which budget will cover the difference.</p>') +
     '<div class="field"><label for="budgetSource">Budget source <span class="req">*</span></label><textarea id="budgetSource" name="budgetSource" placeholder="e.g. research grant, department budget, personal funds">' + esc(d.budgetSource) + '</textarea></div>' +
@@ -447,7 +463,7 @@ function savedBanner(){
   let line = "";
   if (state.saved){
     const o = state.saved;
-    line = '<b>' + (o.category === "mac" ? "Mac" : "PC") + ':</b> ' + esc(o.itemName) + ' · ' + (o.topUp > 0 ? 'top-up <span class="num">' + baht2(o.topUp) + '</span>' : 'within budget');
+    line = '<b>' + (o.category === "mac" ? "Mac" : "PC") + ':</b> ' + esc(o.itemName) + ' · ' + (o.tbc ? 'top-up, price TBC' : o.topUp > 0 ? 'top-up <span class="num">' + baht2(o.topUp) + '</span>' : 'within budget');
   } else if (state.savedTablet){
     const o = state.savedTablet;
     line = '<b>Tablet:</b> ' + esc(o.itemName) + ' · ' + (o.estTopUp > 0 ? 'may need top-up' : 'likely within budget') + ' · awaiting quotation';
@@ -456,7 +472,7 @@ function savedBanner(){
   return '<div class="saved fade"><p class="eyebrow">Your current choice · choosing again replaces it</p><div class="saved-row"><p>' + line + '</p><button class="btn small ghost" type="button" data-view-saved="' + (state.saved ? "computer" : "tablet") + '">View</button></div></div>';
 }
 function viewChoose(){
-  const within = cat => CATALOG.filter(i=>i.cat===cat && topUpOf(i.base)===0).length;
+  const within = cat => CATALOG.filter(i=>i.cat===cat && !i.tbc && topUpOf(i.base)===0).length;
   const count = cat => CATALOG.filter(i=>i.cat===cat).length;
   const rangeText = cat => count(cat) + " configurations · " + within(cat) + " within budget";
   const current = state.saved ? state.saved.category : state.savedTablet ? "tablet" : null;
@@ -473,12 +489,12 @@ function viewChoose(){
     '<button type="button" class="pick fade' + (current === "pc" ? " is-current" : "") + '" data-cat="pc">' + mark("pc") + photo("img/asus-expertbook-p5.png", "Windows laptop") +
       '<h2>PC</h2><p class="sub">Windows 11 laptops · ASUS, Lenovo</p><p class="range num">' + rangeText("pc") + '</p><span class="cta">Choose PC ›</span></button>' +
     '<button type="button" class="pick fade' + (current === "tablet" ? " is-current" : "") + '" data-go="tablets">' + mark("tablet") + photo("img/tab-air-blue.png", "Tablet") +
-      '<h2>Tablet</h2><p class="sub">iPad or Samsung Galaxy Tab</p><p class="range">Price confirmed after quotation</p><span class="cta">Choose tablet ›</span></button>' +
+      '<h2>Tablet</h2><p class="sub">iPad, Galaxy Tab or Surface Pro</p><p class="range">Price confirmed after quotation</p><span class="cta">Choose tablet ›</span></button>' +
   '</section>' +
   '<p class="choose-note">Computers use the computer budget; tablets use the separate tablet budget. You can order only one item, and you can change your choice later.</p>';
 }
 function viewLineup(){
-  const items = CATALOG.filter(i => i.cat === state.cat).slice().sort((a,b)=>a.base-b.base);
+  const items = CATALOG.filter(i => i.cat === state.cat).slice().sort((a,b)=>(a.sortKey || a.base)-(b.sortKey || b.base));
   const isMac = state.cat === "mac";
   return '<section class="lineup-head fade">' +
     '<p class="eyebrow">' + (isMac ? "Mac" : "PC") + ' lineup</p>' +
@@ -491,7 +507,7 @@ function viewLineup(){
     return '<article class="card fade">' + artFor(it, "silver") +
       '<div><p class="eyebrow">' + esc(it.tag) + '</p><h3>' + esc(it.name) + (it.model ? ' <span class="th">' + esc(it.model) + '</span>' : '') + '</h3><p class="chip">' + esc(it.chip) + '</p></div>' +
       '<div class="hl">' + it.hl.map(h => '<div><b>' + esc(h[0]) + '</b><span>' + esc(h[1]) + '</span></div>').join("") + '</div>' +
-      costBlock(total, it.applecare ? "without AppleCare+" : "") +
+      (it.tbc ? tbcBlock() : costBlock(total, it.applecare ? "without AppleCare+" : "")) +
       '<div class="spacer"></div>' + quoteLine(it) +
       '<button class="btn" type="button" data-item="' + it.id + '">Select</button>' +
     '</article>';
@@ -504,7 +520,7 @@ function viewConfigure(){
     '<div class="stage">' +
       '<div class="stage-art" id="stageArt">' + artFor(it, state.color) + '</div>' +
       '<div class="specs"><h3>Specifications <span class="th">รายละเอียด</span></h3><ul>' + it.specs.map(s => '<li>' + esc(s) + '</li>').join("") + '</ul></div>' +
-      '<p class="quote-meta">Vendor: ' + esc(it.vendor) + ' · Quote ' + esc(it.quote) + ' dated ' + fmtDate(it.quoteDate) + '</p>' +
+      (it.tbc ? '<p class="quote-meta">Quotation pending · price to be confirmed</p>' : '<p class="quote-meta">Vendor: ' + esc(it.vendor) + ' · Quote ' + esc(it.quote) + ' dated ' + fmtDate(it.quoteDate) + '</p>') +
     '</div>' +
     '<form class="panel" id="orderForm" novalidate>' +
       '<div><p class="eyebrow">' + esc(it.tag) + '</p><h1>Confirm ' + esc(it.name) + '</h1><p class="chip" style="color:var(--muted)">' + esc(it.chip) + '</p></div>' +
@@ -542,7 +558,7 @@ function viewTablets(){
     return '<article class="card fade">' + tabletArt(f, f.colors[0].id) +
       '<div><p class="eyebrow">' + esc(f.tag) + '</p><h3>' + esc(f.name) + '</h3><p class="chip">' + esc(f.chip) + ' · ' + sizes + '</p></div>' +
       '<p class="blurb">' + esc(f.blurb) + '</p>' +
-      '<div class="hl"><div><b>' + sizes + '</b><span>display</span></div><div><b>' + gb(f.storage[0]) + '–' + gb(f.storage[f.storage.length-1]) + '</b><span>storage</span></div><div><b>' + f.colors.length + '</b><span>colours</span></div></div>' +
+      '<div class="hl"><div><b>' + sizes + '</b><span>display</span></div><div><b>' + gb(f.storage[0]) + '–' + gb(f.storage[f.storage.length-1]) + '</b><span>storage</span></div><div><b>' + f.colors.length + '</b><span>' + (f.colors.length === 1 ? "colour" : "colours") + '</span></div></div>' +
       (within
         ? '<div class="cost ok"><b>Options within budget</b><small>Estimate · larger configurations may need a top-up</small></div>'
         : '<div class="cost warn"><b>May need top-up</b><small>Estimate · all configurations are likely above the tablet budget</small></div>') +
@@ -565,10 +581,14 @@ function tOptionsHTML(){
     h += '<div class="section"><h2>Size<span class="th">ขนาดหน้าจอ</span></h2><div class="tiles two">' +
       fam.sizes.map(s => radio("tsize", s, t.size === s, s + "-inch", s === 11 ? "Most portable" : "Largest display", estChip(tPrice(fam, s, t.conn, t.storage, t.nano)))).join("") + '</div></div>';
   }
-  h += '<div class="section"><h2>Connectivity<span class="th">การเชื่อมต่อ</span></h2><div class="tiles two">' +
+  if (fam.price.cell){
+    h += '<div class="section"><h2>Connectivity<span class="th">การเชื่อมต่อ</span></h2><div class="tiles two">' +
     radio("tconn", "wifi", t.conn === "wifi", "Wi-Fi", "Connects over Wi-Fi", estChip(tPrice(fam, t.size, "wifi", t.storage, t.nano))) +
     radio("tconn", "cell", t.conn === "cell", fam.cellLabel || "Wi-Fi + Cellular", "Adds a mobile data connection", estChip(tPrice(fam, t.size, "cell", t.storage, t.nano))) +
   '</div></div>';
+  } else {
+    h += '<div class="section"><h2>Connectivity<span class="th">การเชื่อมต่อ</span></h2><p class="hint">Wi-Fi only. There is no cellular version of this model.</p></div>';
+  }
   h += '<div class="section"><h2>Storage<span class="th">พื้นที่จัดเก็บข้อมูล</span></h2><div class="tiles">' +
     fam.storage.map(s => radio("tstorage", s, t.storage === s, gb(s), "", estChip(tPrice(fam, t.size, t.conn, s, t.nano && s >= 1024)))).join("") + '</div></div>';
   if (fam.nano){
@@ -595,6 +615,7 @@ function viewTConfigure(){
     '</div>' +
     '<form class="panel" id="orderForm" novalidate>' +
       '<div><p class="eyebrow">Tablet request</p><h1>Choose your ' + esc(fam.name) + '</h1><p class="chip" style="color:var(--muted)">' + esc(fam.chip) + '</p></div>' +
+      (fam.note ? '<p class="notice">' + esc(fam.note) + '</p>' : '') +
       '<div id="tOpts">' + tOptionsHTML() + '</div>' +
       '<div class="section"><h2>Estimated cost<span class="th">ค่าใช้จ่ายโดยประมาณ</span></h2><div class="summary" id="summary"></div></div>' +
       '<div id="topupWrap"></div>' +
@@ -615,11 +636,13 @@ function receiptHTML(o){
     '<div class="row"><span>Computer</span><b style="text-align:right">' + esc(o.itemName) + '</b></div>' +
     (o.color ? '<div class="row"><span>Colour</span><span>' + esc(o.color) + '</span></div>' : '') +
     (o.category === "mac" ? '<div class="row"><span>AppleCare+</span><span>' + (o.applecare ? "Included" : "Not included") + '</span></div>' : '') +
-    (o.topUp > 0
+    (o.tbc
+      ? '<div class="row topup"><span>Added cost (top-up)</span><span>To be confirmed</span></div><div class="row"><span>Budget source</span><span style="text-align:right">' + esc(o.budgetSource) + (o.grantCode ? " (" + esc(o.grantCode) + ")" : "") + '</span></div>'
+      : o.topUp > 0
       ? '<div class="row topup"><span>Added cost (top-up)</span><span class="num">' + baht2(o.topUp) + '</span></div><div class="row"><span>Budget source</span><span style="text-align:right">' + esc(o.budgetSource) + (o.grantCode ? " (" + esc(o.grantCode) + ")" : "") + '</span></div>'
       : '<div class="row ok"><span>Status</span><span>Within budget</span></div>') +
     '<div class="row"><span>Ordered by</span><span style="text-align:right">' + esc(o.fullName) + '</span></div>' +
-    '<p class="ref">Quote ' + esc(o.quoteRef) + ' · submitted ' + new Date(o.updatedAt).toLocaleString("en-GB") + '</p>' +
+    '<p class="ref">' + (o.tbc ? 'Quotation pending' : 'Quote ' + esc(o.quoteRef)) + ' · submitted ' + new Date(o.updatedAt).toLocaleString("en-GB") + '</p>' +
   '</div>';
 }
 function tabletReceiptHTML(o){
@@ -653,12 +676,14 @@ function viewDone(){
 /* ---------- configure behaviour (computer) ---------- */
 function currentTotals(){
   const it = byId(state.itemId);
+  if (it.tbc) return {it, total: null, topUp: null, tbc: true, needs: true};
   const total = totalOf(it, state.applecare);
-  return {it, total, topUp: topUpOf(total)};
+  const topUp = topUpOf(total);
+  return {it, total, topUp, tbc: false, needs: topUp > 0};
 }
 function setTopup(amount, limit, tentative){
   const wrap = $("#topupWrap"); if (!wrap) return;
-  if (amount > 0){
+  if (amount > 0 || tentative === "tbc"){
     if (!wrap.firstChild) wrap.innerHTML = topupFields(amount, limit, tentative);
     else wrap.querySelector("p").innerHTML = topupFields(amount, limit, tentative).match(/<p>([\s\S]*?)<\/p>/)[1];
   } else {
@@ -666,8 +691,19 @@ function setTopup(amount, limit, tentative){
   }
 }
 function updateSummary(){
-  const {it, topUp} = currentTotals();
+  const {it, topUp, tbc} = currentTotals();
   const s = $("#summary"); if (!s) return;
+  if (tbc){
+    s.innerHTML = '<div class="row"><span>' + esc(it.name) + '</span><span>Price TBC</span></div>' +
+      (it.applecare && state.applecare ? '<div class="row"><span>AppleCare+ (3 years)</span><span>Adds to the top-up</span></div>' : '') +
+      '<div class="row topup total"><span>Added cost (top-up)</span><span>To be confirmed</span></div>' +
+      '<p class="hint">This set is above the allowance. We will confirm the exact top-up once we receive the quotation.</p>';
+    const ac = $("#acCost"); if (ac){ ac.textContent = "Adds to top-up"; ac.style.color = "var(--warn)"; }
+    setTopup(0, ALLOWANCE, "tbc");
+    $("#agreeText").textContent = "I confirm this is the computer set I want the faculty to order for me and that I will cover the top-up, once confirmed, from the budget named above.";
+    renderBar();
+    return;
+  }
   s.innerHTML =
     '<div class="row"><span>' + esc(it.name) + '</span><span>' + (topUpOf(it.base) > 0 ? '<span class="num">+' + baht2(topUpOf(it.base)) + '</span>' : 'Covered by allowance') + '</span></div>' +
     (it.applecare && state.applecare ? '<div class="row"><span>AppleCare+ (3 years)</span><span>' + (acExtra(it) > 0 ? '<span class="num">+' + baht2(acExtra(it)) + '</span>' : 'Covered by allowance') + '</span></div>' : '') +
@@ -724,9 +760,9 @@ function bindTConfigure(){
 function renderBar(){
   const bar = $("#bar");
   if (state.view === "configure"){
-    const {it, topUp} = currentTotals();
+    const {it, topUp, tbc} = currentTotals();
     bar.hidden = false;
-    bar.innerHTML = '<div class="bar-in"><div class="what">' + (topUp > 0 ? '<b class="num" style="color:var(--warn)">+' + baht2(topUp) + ' added cost</b>' : '<b style="color:var(--ok)">Within budget</b>') + esc(it.name) + (it.applecare && state.applecare ? ' + AppleCare+' : '') + '</div>' +
+    bar.innerHTML = '<div class="bar-in"><div class="what">' + (tbc ? '<b style="color:var(--warn)">Top-up · price TBC</b>' : topUp > 0 ? '<b class="num" style="color:var(--warn)">+' + baht2(topUp) + ' added cost</b>' : '<b style="color:var(--ok)">Within budget</b>') + esc(it.name) + (it.applecare && state.applecare ? ' + AppleCare+' : '') + '</div>' +
       '<button class="btn" type="button" id="submitBtn"' + (readOnly ? " disabled" : "") + '>' + (state.saved ? "Update order" : "Confirm order") + '</button></div>';
     $("#submitBtn").addEventListener("click", submitOrder);
   } else if (state.view === "tconfigure"){
@@ -779,16 +815,16 @@ async function save(path, doc, label, onDone){
   }
 }
 function submitOrder(){
-  const {it, total, topUp} = currentTotals();
-  const problems = validate(topUp > 0);
+  const {it, total, topUp, tbc, needs} = currentTotals();
+  const problems = validate(needs);
   if (problems.length) return showErr("Please fill in " + problems.join(", ") + ".");
   const now = new Date().toISOString();
   const color = it.cat === "mac" ? (MAC_COLORS.find(c=>c.id===state.color) || {}).name : "";
   save("orders", Object.assign({
     itemId: it.id, itemName: it.name + (it.model ? " " + it.model : "") + " (" + it.chip + ", " + it.hl.slice(0,2).map(h=>h[0]).join("/") + ")",
     category: it.cat, applecare: !!(it.applecare && state.applecare), color: color || "",
-    total, topUp, withinBudget: topUp === 0, allowance: ALLOWANCE,
-    budgetSource: topUp > 0 ? val("budgetSource") : "", grantCode: topUp > 0 ? val("grantCode") : "",
+    total, topUp, tbc, withinBudget: !needs, allowance: ALLOWANCE,
+    budgetSource: needs ? val("budgetSource") : "", grantCode: needs ? val("grantCode") : "",
     vendor: it.vendor, quoteRef: it.quote,
     submittedAt: state.saved && state.saved.submittedAt ? state.saved.submittedAt : now, updatedAt: now
   }, contactData()), "order", doc => { state.saved = doc; state.lastOrder = doc; go("done", {doneKind:"computer"}); });
@@ -824,6 +860,7 @@ function openTablet(famId){
   const storage = s ? fam.storage.find(x => gb(x) === s.storage) || fam.storage[0] : fam.storage[0];
   go("tconfigure", {t:{ fam: famId, size: s ? s.size : fam.sizes[0], conn: s && s.connectivity && s.connectivity !== "Wi-Fi" ? "cell" : "wifi",
     storage, nano: s ? !!s.nanoTexture : false, color }});
+  if (!fam.price.cell) state.t.conn = "wifi";
 }
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-cat],[data-item],[data-go],[data-view-saved],[data-change],[data-fam],[data-admin-tab]");
