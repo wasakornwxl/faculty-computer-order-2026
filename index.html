@@ -301,7 +301,7 @@ const CATALOG = [
     base:79715, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26090061", quoteDate:"2026-09-02", validUntil:"2026-10-02", pc:"gaming" }
 ];
 
-/* Tablets: estimates from the COM7 iPad price list (education price, VAT included). Not a quotation. */
+/* Tablets: estimates, not quotations. iPad from the COM7 iPad price list; Samsung from samsung.com/th. */
 const TABLET_SOURCE = "COM7 iPad price list, education price (ราคาการศึกษา), VAT included";
 const TABLETS = [
   { id:"ipad", name:"iPad", chip:"A16 chip", tag:"Everyday", img:"ipad",
@@ -319,7 +319,13 @@ const TABLETS = [
     sizes:[11,13], storage:[256,512,1024,2048],
     price:{ wifi:{11:[40900,47900,62900,81900], 13:[52900,59900,74900,93900]}, cell:{11:[47900,54900,69900,88900], 13:[59900,66900,81900,100900]} },
     nano:{ wifi:{11:{1024:66900,2048:85900}, 13:{1024:78900,2048:97900}}, cell:{11:{1024:73900,2048:92900}, 13:{1024:85900,2048:104900}} },
-    colors:[{id:"silver",name:"Silver",hex:"#e3e4e6"},{id:"spaceblack",name:"Space Black",hex:"#2d2d30"}] }
+    colors:[{id:"silver",name:"Silver",hex:"#e3e4e6"},{id:"spaceblack",name:"Space Black",hex:"#2d2d30"}] },
+  { id:"s11", name:"Samsung Galaxy Tab S11", chip:"Android · S Pen included", tag:"Android", img:"s11", cellLabel:"Wi-Fi + 5G",
+    blurb:"An 11-inch Android tablet with the S Pen in the box, for notes, annotation and Samsung DeX.",
+    source:"Samsung Thailand online store (samsung.com/th), regular price, VAT included",
+    sizes:[11], storage:[128,256],
+    price:{ wifi:{11:[28900,32900]}, cell:{11:[33900,37900]} },
+    colors:[{id:"gray",name:"Gray",hex:"#6d6f73"},{id:"silver",name:"Silver",hex:"#dfe1e4"}] }
 ];
 
 /* ---------- helpers ---------- */
@@ -466,8 +472,8 @@ function viewChoose(){
       '<h2>Mac</h2><p class="sub">MacBook Air with M5 · macOS</p><p class="range num">' + rangeText("mac") + '</p><span class="cta">Choose Mac ›</span></button>' +
     '<button type="button" class="pick fade' + (current === "pc" ? " is-current" : "") + '" data-cat="pc">' + mark("pc") + photo("img/asus-expertbook-p5.png", "Windows laptop") +
       '<h2>PC</h2><p class="sub">Windows 11 laptops · ASUS, Lenovo</p><p class="range num">' + rangeText("pc") + '</p><span class="cta">Choose PC ›</span></button>' +
-    '<button type="button" class="pick fade' + (current === "tablet" ? " is-current" : "") + '" data-go="tablets">' + mark("tablet") + photo("img/tab-air-blue.png", "iPad") +
-      '<h2>Tablet</h2><p class="sub">iPad, iPad Air, iPad Pro</p><p class="range">Price confirmed after quotation</p><span class="cta">Choose tablet ›</span></button>' +
+    '<button type="button" class="pick fade' + (current === "tablet" ? " is-current" : "") + '" data-go="tablets">' + mark("tablet") + photo("img/tab-air-blue.png", "Tablet") +
+      '<h2>Tablet</h2><p class="sub">iPad or Samsung Galaxy Tab</p><p class="range">Price confirmed after quotation</p><span class="cta">Choose tablet ›</span></button>' +
   '</section>' +
   '<p class="choose-note">Computers use the computer budget; tablets use the separate tablet budget. You can order only one item, and you can change your choice later.</p>';
 }
@@ -524,10 +530,10 @@ function viewConfigure(){
 function viewTablets(){
   return '<section class="lineup-head fade">' +
     '<p class="eyebrow">Tablet · separate tablet budget</p>' +
-    '<h1>Which iPad is right for you?</h1>' +
+    '<h1>Which tablet is right for you?</h1>' +
     '<p>Choose a model and configuration. We will use your choice to request a quotation from the distributor, then confirm the final price with you.</p>' +
   '</section>' +
-  '<div class="estimate-banner fade"><b>Prices not confirmed yet.</b> “Within budget” and “May need top-up” are estimates from a catalog. The distributor’s quotation may differ.</div>' +
+  '<div class="estimate-banner fade"><b>Prices not confirmed yet.</b> “Within budget” and “May need top-up” are estimates from a catalog or online store. The distributor’s quotation may differ.</div>' +
   '<section class="cards">' +
   TABLETS.map(f => {
     const min = tMin(f);
@@ -561,7 +567,7 @@ function tOptionsHTML(){
   }
   h += '<div class="section"><h2>Connectivity<span class="th">การเชื่อมต่อ</span></h2><div class="tiles two">' +
     radio("tconn", "wifi", t.conn === "wifi", "Wi-Fi", "Connects over Wi-Fi", estChip(tPrice(fam, t.size, "wifi", t.storage, t.nano))) +
-    radio("tconn", "cell", t.conn === "cell", "Wi-Fi + Cellular", "Adds a mobile data connection", estChip(tPrice(fam, t.size, "cell", t.storage, t.nano))) +
+    radio("tconn", "cell", t.conn === "cell", fam.cellLabel || "Wi-Fi + Cellular", "Adds a mobile data connection", estChip(tPrice(fam, t.size, "cell", t.storage, t.nano))) +
   '</div></div>';
   h += '<div class="section"><h2>Storage<span class="th">พื้นที่จัดเก็บข้อมูล</span></h2><div class="tiles">' +
     fam.storage.map(s => radio("tstorage", s, t.storage === s, gb(s), "", estChip(tPrice(fam, t.size, t.conn, s, t.nano && s >= 1024)))).join("") + '</div></div>';
@@ -585,7 +591,7 @@ function viewTConfigure(){
   return '<div class="config">' +
     '<div class="stage">' +
       '<div class="stage-art" id="stageArt">' + tabletArt(fam, t.color) + '</div>' +
-      '<div class="estimate-banner"><b>Estimate only.</b> Budget status comes from a catalog. We will request a quotation from the distributor and confirm the final price with you before ordering.</div>' +
+      '<div class="estimate-banner"><b>Estimate only.</b> Budget status comes from a catalog or online store price. We will request a quotation from the distributor and confirm the final price with you before ordering.</div>' +
     '</div>' +
     '<form class="panel" id="orderForm" novalidate>' +
       '<div><p class="eyebrow">Tablet request</p><h1>Choose your ' + esc(fam.name) + '</h1><p class="chip" style="color:var(--muted)">' + esc(fam.chip) + '</p></div>' +
@@ -593,7 +599,7 @@ function viewTConfigure(){
       '<div class="section"><h2>Estimated cost<span class="th">ค่าใช้จ่ายโดยประมาณ</span></h2><div class="summary" id="summary"></div></div>' +
       '<div id="topupWrap"></div>' +
       '<div class="section"><h2>Accessories<span class="th">อุปกรณ์เสริม</span></h2>' +
-        '<div class="field"><label for="accessories">Accessories to include in the quotation request</label><input id="accessories" name="accessories" value="' + esc(d.accessories) + '" placeholder="Optional, e.g. Apple Pencil Pro, Magic Keyboard"><span class="hint">Accessories are not in the catalog, so they are not part of the estimate.</span></div>' +
+        '<div class="field"><label for="accessories">Accessories to include in the quotation request</label><input id="accessories" name="accessories" value="' + esc(d.accessories) + '" placeholder="Optional, e.g. stylus, keyboard cover, case"><span class="hint">Accessories are not part of the estimate.</span></div>' +
       '</div>' +
       contactFields() +
       '<label class="check"><input type="checkbox" id="agree"> <span id="agreeText"></span></label>' +
@@ -690,7 +696,7 @@ function updateTSummary(){
 }
 function tabletName(){
   const {fam, t} = tCurrent();
-  return fam.name + " " + t.size + "″ " + (t.conn === "cell" ? "Wi-Fi + Cellular" : "Wi-Fi") + " " + gb(t.storage) + (t.nano ? " · Nano-texture" : "");
+  return fam.name + " " + t.size + "″ " + (t.conn === "cell" ? (fam.cellLabel || "Wi-Fi + Cellular") : "Wi-Fi") + " " + gb(t.storage) + (t.nano ? " · Nano-texture" : "");
 }
 function bindTConfigure(){
   const f = $("#orderForm");
@@ -793,9 +799,9 @@ function submitTablet(){
   if (problems.length) return showErr("Please fill in " + problems.join(", ") + ".");
   const now = new Date().toISOString();
   save("tablets", Object.assign({
-    family: fam.id, itemName: tabletName(), chip: fam.chip, size: t.size, connectivity: t.conn === "cell" ? "Wi-Fi + Cellular" : "Wi-Fi",
+    family: fam.id, itemName: tabletName(), chip: fam.chip, size: t.size, connectivity: t.conn === "cell" ? (fam.cellLabel || "Wi-Fi + Cellular") : "Wi-Fi",
     storage: gb(t.storage), nanoTexture: !!t.nano, color: (fam.colors.find(c => c.id === t.color) || {}).name || "",
-    estPrice: price, estTopUp: topUp, estWithinBudget: topUp === 0, allowance: TABLET_ALLOWANCE, priceSource: TABLET_SOURCE,
+    estPrice: price, estTopUp: topUp, estWithinBudget: topUp === 0, allowance: TABLET_ALLOWANCE, priceSource: fam.source || TABLET_SOURCE,
     connCode: t.conn, storageGB: t.storage, status: "awaiting quotation", accessories: val("accessories"),
     budgetSource: topUp > 0 ? val("budgetSource") : "", grantCode: topUp > 0 ? val("grantCode") : "",
     submittedAt: state.savedTablet && state.savedTablet.submittedAt ? state.savedTablet.submittedAt : now, updatedAt: now
@@ -816,7 +822,7 @@ function openTablet(famId){
   const s = state.savedTablet && state.savedTablet.family === famId ? state.savedTablet : null;
   const color = s ? ((fam.colors.find(c => c.name === s.color) || fam.colors[0]).id) : fam.colors[0].id;
   const storage = s ? fam.storage.find(x => gb(x) === s.storage) || fam.storage[0] : fam.storage[0];
-  go("tconfigure", {t:{ fam: famId, size: s ? s.size : fam.sizes[0], conn: s && s.connectivity === "Wi-Fi + Cellular" ? "cell" : "wifi",
+  go("tconfigure", {t:{ fam: famId, size: s ? s.size : fam.sizes[0], conn: s && s.connectivity && s.connectivity !== "Wi-Fi" ? "cell" : "wifi",
     storage, nano: s ? !!s.nanoTexture : false, color }});
 }
 document.addEventListener("click", e => {

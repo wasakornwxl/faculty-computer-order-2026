@@ -31,7 +31,8 @@ const COMPUTERS = {
 };
 const MAC_COLOURS = ["Sky Blue", "Silver", "Starlight", "Midnight"];
 
-/* Tablets: estimates from the COM7 iPad price list (education price, VAT included). Not a quotation. */
+/* Tablets: estimates, not quotations. iPad: COM7 iPad price list (education price, VAT incl.).
+   Samsung: samsung.com/th regular price (VAT incl.), checked 27 Sep 2026. */
 const TABLETS = {
   ipad: { name: "iPad", chip: "A16", sizes: [11], storage: [128, 256, 512],
     price: { wifi: { 11: [16300, 20300, 27300] }, cell: { 11: [22300, 26300, 33300] } },
@@ -45,7 +46,10 @@ const TABLETS = {
              cell: { 11: [47900, 54900, 69900, 88900], 13: [59900, 66900, 81900, 100900] } },
     nano: { wifi: { 11: { 1024: 66900, 2048: 85900 }, 13: { 1024: 78900, 2048: 97900 } },
             cell: { 11: { 1024: 73900, 2048: 92900 }, 13: { 1024: 85900, 2048: 104900 } } },
-    colours: ["Silver", "Space Black"] }
+    colours: ["Silver", "Space Black"] },
+  s11: { name: "Samsung Galaxy Tab S11", chip: "", cellLabel: "Wi-Fi + 5G", sizes: [11], storage: [128, 256],
+    price: { wifi: { 11: [28900, 32900] }, cell: { 11: [33900, 37900] } },
+    colours: ["Gray", "Silver"] }
 };
 
 const SHEETS = {
@@ -162,10 +166,11 @@ function tabletRecord(d) {
   if (topUp > 0 && !source) throw new Error("Please fill in the budget source in case of a top-up.");
   const grant = topUp > 0 ? clean(d.grantCode, 100) : "";
   const gb = storage >= 1024 ? (storage / 1024) + "TB" : storage + "GB";
-  const title = fam.name + " (" + fam.chip + ")";
+  const title = fam.chip ? fam.name + " (" + fam.chip + ")" : fam.name;
+  const connName = conn === "cell" ? (fam.cellLabel || "Wi-Fi + Cellular") : "Wi-Fi";
   return {
-    cells: [title, size + "-inch", conn === "cell" ? "Wi-Fi + Cellular" : "Wi-Fi", gb, nano ? "Yes" : "No", colour, price, topUp, source, grant, clean(d.accessories, 300), "Awaiting quotation", clean(d.notes, 1000), d.family],
-    summary: title + " " + size + "″ " + (conn === "cell" ? "Wi-Fi + Cellular" : "Wi-Fi") + " " + gb + (nano ? " nano-texture" : ""),
+    cells: [title, size + "-inch", connName, gb, nano ? "Yes" : "No", colour, price, topUp, source, grant, clean(d.accessories, 300), "Awaiting quotation", clean(d.notes, 1000), d.family],
+    summary: title + " " + size + "″ " + connName + " " + gb + (nano ? " nano-texture" : ""),
     budgetLine: topUp > 0 ? "May need top-up (catalog estimate) from: " + source : "Likely within budget (catalog estimate)",
     reply: { estTopUp: topUp }
   };
