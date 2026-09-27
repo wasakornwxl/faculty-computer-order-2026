@@ -49,20 +49,33 @@ const TABLETS = {
 };
 
 const SHEETS = {
-  computer: { name: "Computers", headers: ["Updated", "First submitted", "Email", "Name", "Phone", "Platform", "Computer", "Colour", "AppleCare+", "Price (THB)", "Top-up (THB)", "Budget source", "Grant code", "Vendor", "Quote", "Notes", "Item ID"] },
-  tablet:   { name: "Tablets",   headers: ["Updated", "First submitted", "Email", "Name", "Phone", "Tablet", "Size", "Connectivity", "Storage", "Nano-texture", "Colour", "Est. price (THB)", "Est. top-up (THB)", "Budget source", "Grant code", "Accessories", "Status", "Notes", "Model ID"] }
+  computer: { name: "Computers", headers: ["Updated", "First submitted", "Email", "Name", "Platform", "Computer", "Colour", "AppleCare+", "Price (THB)", "Top-up (THB)", "Budget source", "Grant code", "Vendor", "Quote", "Notes", "Item ID"] },
+  tablet:   { name: "Tablets",   headers: ["Updated", "First submitted", "Email", "Name", "Tablet", "Size", "Connectivity", "Storage", "Nano-texture", "Colour", "Est. price (THB)", "Est. top-up (THB)", "Budget source", "Grant code", "Accessories", "Status", "Notes", "Model ID"] }
 };
-const EMAIL_COL = 3; // column C in both sheets
+const FIXED = ["Updated", "First submitted", "Email", "Name"]; // first four headers of both sheets
 
-/** Run once from the Apps Script editor to create the two sheets with headers. */
+/**
+ * Run once from the Apps Script editor to create the two sheets with headers.
+ * Safe to run again: it only adds headers that are missing and never moves your data.
+ * Values are written by header name, so you may reorder columns, delete ones you
+ * don't need, or add your own (e.g. "PO number"); your own columns are kept on updates.
+ */
 function setup() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   Object.keys(SHEETS).forEach(k => {
     const def = SHEETS[k];
-    let sh = ss.getSheetByName(def.name) || ss.insertSheet(def.name);
-    sh.getRange(1, 1, 1, def.headers.length).setValues([def.headers]).setFontWeight("bold").setBackground("#e3edfb");
+    const sh = ss.getSheetByName(def.name) || ss.insertSheet(def.name);
+    const have = headersOf(sh);
+    if (!have.some(Boolean)) {
+      sh.getRange(1, 1, 1, def.headers.length).setValues([def.headers]);
+    } else {
+      const missing = def.headers.filter(h => have.indexOf(h) < 0);
+      if (missing.length) sh.getRange(1, have.length + 1, 1, missing.length).setValues([missing]);
+    }
+    const n = headersOf(sh).length;
+    sh.getRange(1, 1, 1, n).setFontWeight("bold").setBackground("#e3edfb");
     sh.setFrozenRows(1);
-    sh.autoResizeColumns(1, def.headers.length);
+    sh.autoResizeColumns(1, n);
   });
 }
 
@@ -97,14 +110,13 @@ function doPost(e) {
     // Keep the first submission time, then remove this person's row from the other sheet.
     let first = now;
     const inOther = findRow(other, email);
-    if (inOther) { first = other.getRange(inOther, 2).getValue() || now; other.deleteRow(inOther); }
+    if (inOther) { first = cellByHeader(other, inOther, "First submitted") || now; other.deleteRow(inOther); }
     const existing = findRow(target, email);
-    if (existing) first = target.getRange(existing, 2).getValue() || first;
+    if (existing) first = cellByHeader(target, existing, "First submitted") || first;
 
-    const row = [now, first, email, name, clean(data.phone, 40)].concat(rec.cells).concat([]);
-    const values = [row.map(safeCell)];
-    if (existing) target.getRange(existing, 1, 1, row.length).setValues(values);
-    else target.appendRow(values[0]);
+    const fields = { "Updated": now, "First submitted": first, "Email": email, "Name": name };
+    SHEETS[kind].headers.slice(FIXED.length).forEach((h, i) => { fields[h] = rec.cells[i]; });
+    writeRow(target, existing, fields);
 
     if (CONFIG.NOTIFY_EMAIL) {
       MailApp.sendEmail(CONFIG.NOTIFY_EMAIL, "Order: " + name + " — " + rec.summary,
@@ -159,10 +171,32 @@ function tabletRecord(d) {
   };
 }
 
+function headersOf(sheet) {
+  const cols = sheet.getLastColumn();
+  return cols ? sheet.getRange(1, 1, 1, cols).getValues()[0].map(h => String(h).trim()) : [];
+}
+function colOf(sheet, header) {
+  const i = headersOf(sheet).indexOf(header);
+  if (i < 0) throw new Error("The sheet \"" + sheet.getName() + "\" has no \"" + header + "\" column. Run setup() in Apps Script.");
+  return i + 1;
+}
+function cellByHeader(sheet, row, header) {
+  const i = headersOf(sheet).indexOf(header);
+  return i < 0 ? "" : sheet.getRange(row, i + 1).getValue();
+}
+// Write values into the columns whose header matches; other columns keep what they had.
+function writeRow(sheet, row, fields) {
+  const headers = headersOf(sheet);
+  if (headers.indexOf("Email") < 0) throw new Error("The order sheet is not set up yet. Run setup() in Apps Script.");
+  const current = row ? sheet.getRange(row, 1, 1, headers.length).getValues()[0] : headers.map(() => "");
+  const values = headers.map((h, i) => Object.prototype.hasOwnProperty.call(fields, h) ? safeCell(fields[h]) : current[i]);
+  if (row) sheet.getRange(row, 1, 1, headers.length).setValues([values]);
+  else sheet.appendRow(values);
+}
 function findRow(sheet, email) {
   const last = sheet.getLastRow();
   if (last < 2) return 0;
-  const emails = sheet.getRange(2, EMAIL_COL, last - 1, 1).getValues();
+  const emails = sheet.getRange(2, colOf(sheet, "Email"), last - 1, 1).getValues();
   for (let i = 0; i < emails.length; i++) {
     if (String(emails[i][0]).trim().toLowerCase() === email) return i + 2;
   }

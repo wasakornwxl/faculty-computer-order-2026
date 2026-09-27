@@ -46,6 +46,7 @@ The `apps-script` folder and this file don't need to be uploaded.
 ## How the data works
 
 - **One row per person:** each email has one row across both tabs. A new submission replaces the old one, and moving from computer to tablet moves the row between tabs.
+- **Columns are matched by header name:** you can reorder or delete columns, or add your own, such as "PO number" or "Delivered". Your own columns are kept when someone updates their order. Don't rename the built-in headers. Running `setup` again only adds missing headers.
 - **Prices are checked on the server:** the script works out the price and top-up from its own price list, so a tampered page can't change them.
 - **Typed text is made safe:** text that starts with `=`, `+`, `-` or `@` is stored as plain text, not as a formula.
 - **Returning visitors:** the page remembers what that browser last submitted. On a different device, the person just submits again and their row is replaced.

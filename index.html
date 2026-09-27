@@ -417,13 +417,12 @@ function topupFields(amount, limit, tentative){
 function contactFields(){
   const d = draft;
   return '<div class="section"><h2>Your details<span class="th">ข้อมูลผู้สั่ง</span></h2>' +
-    '<div class="field"><label for="fullName">Full name <span class="req">*</span></label><input id="fullName" name="fullName" autocomplete="name" value="' + esc(d.fullName) + '"></div>' +
-    '<div class="grid2"><div class="field"><label for="email">Email <span class="req">*</span></label><input id="email" name="email" type="email" autocomplete="email" value="' + esc(d.email) + '"></div>' +
-    '<div class="field"><label for="phone">Phone</label><input id="phone" name="phone" type="tel" autocomplete="tel" value="' + esc(d.phone) + '"></div></div>' +
+    '<div class="grid2"><div class="field"><label for="fullName">Full name <span class="req">*</span></label><input id="fullName" name="fullName" autocomplete="name" value="' + esc(d.fullName) + '"></div>' +
+    '<div class="field"><label for="email">Email <span class="req">*</span></label><input id="email" name="email" type="email" autocomplete="email" value="' + esc(d.email) + '"></div></div>' +
     '<div class="field"><label for="notes">Notes</label><textarea id="notes" name="notes" placeholder="Anything the purchasing team should know">' + esc(d.notes) + '</textarea></div>' +
   '</div>';
 }
-const DRAFT_FIELDS = ["budgetSource","grantCode","fullName","email","phone","notes","accessories"];
+const DRAFT_FIELDS = ["budgetSource","grantCode","fullName","email","notes","accessories"];
 function val(id){ const el = document.getElementById(id); return el ? (el.value || "").trim() : ""; }
 function validate(needSource){
   const problems = [];
@@ -748,7 +747,7 @@ function dbNotice(){
   if (!ENDPOINT){ n.hidden = false; n.textContent = "Ordering is not connected yet: the web app address is missing from config.js."; return; }
   n.hidden = true;
 }
-function contactData(){ return { fullName: val("fullName"), email: val("email"), phone: val("phone"), notes: val("notes") }; }
+function contactData(){ return { fullName: val("fullName"), email: val("email"), notes: val("notes") }; }
 async function save(path, doc, label, onDone){
   if (!ENDPOINT){ dbNotice(); showErr("This " + label + " was not saved."); return; }
   showErr("");
