@@ -58,6 +58,13 @@ The `apps-script` folder and this file don't need to be uploaded.
 
 After changing `Code.gs`, click **Deploy → Manage deployments → edit (pencil) → Version: New version → Deploy**. The URL stays the same.
 
+## Maintenance functions
+
+Run these from the Apps Script editor: choose the function name in the menu at the top, then click **Run**.
+
+- `markDiscontinued`: highlights rows that still name a product that's no longer offered, and explains why in the **Check** column.
+- `migrateP5toB5`: changes every ASUS P5 order to the ASUS ExpertBook B5 14″, updating price, quote and item ID. Name, email, notes and your own columns are kept, and the change is noted in **Check**. Running it again does nothing once there are no P5 rows left.
+
 ## If prices or products change
 
 Update both files:

@@ -228,6 +228,43 @@ function markDiscontinued() {
   SpreadsheetApp.getUi().alert(flagged ? flagged + " row(s) flagged. See the Check column." : "No rows need attention.");
 }
 
+/** Run once from the Apps Script editor: moves every ASUS P5 order to the ASUS ExpertBook B5 14″. */
+function migrateP5toB5() {
+  const n = replaceComputer("asus-expertbook-p5", "asus-expertbook-b5-14");
+  SpreadsheetApp.getUi().alert(n ? n + " ASUS P5 order(s) changed to ASUS ExpertBook B5 14″. See the Check column." : "No ASUS P5 orders found.");
+}
+
+/**
+ * Rewrites every Computers row whose Item ID is fromId as toId, using the price list above.
+ * Name, email, colour, notes and your own columns are kept; the change is noted in the Check column.
+ */
+function replaceComputer(fromId, toId) {
+  const it = COMPUTERS[toId];
+  if (!it || it.tbc) throw new Error("Unknown or unpriced computer: " + toId);
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEETS.computer.name);
+  if (!sh || sh.getLastRow() < 2) return 0;
+  if (headersOf(sh).indexOf("Check") < 0) sh.getRange(1, headersOf(sh).length + 1).setValue("Check").setFontWeight("bold").setBackground("#e3edfb");
+  const headers = headersOf(sh), idCol = headers.indexOf("Item ID");
+  if (idCol < 0) throw new Error("The Computers sheet has no \"Item ID\" column.");
+  const rows = sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getValues();
+  const topUp = Math.max(0, round2(it.base - CONFIG.COMPUTER_ALLOWANCE));
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "d MMM yyyy");
+  let changed = 0;
+  rows.forEach((r, i) => {
+    if (String(r[idCol]) !== fromId) return;
+    const was = r[headers.indexOf("Computer")];
+    const fields = {
+      "Platform": it.platform, "Computer": it.name, "AppleCare+": it.platform === "Mac" ? r[headers.indexOf("AppleCare+")] : "",
+      "Price (THB)": it.base, "Top-up (THB)": topUp, "Vendor": it.vendor, "Quote": it.quote, "Item ID": toId,
+      "Check": "Changed automatically on " + stamp + " from: " + was
+    };
+    if (topUp === 0) { fields["Budget source"] = ""; fields["Grant code"] = ""; }
+    writeRow(sh, i + 2, fields);
+    changed++;
+  });
+  return changed;
+}
+
 function headersOf(sheet) {
   const cols = sheet.getLastColumn();
   return cols ? sheet.getRange(1, 1, 1, cols).getValues()[0].map(h => String(h).trim()) : [];
