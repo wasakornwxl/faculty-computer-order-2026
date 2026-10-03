@@ -28,7 +28,8 @@ const COMPUTERS = {
   // Price not confirmed yet (no quotation): always treated as a top-up, amounts recorded as "TBC".
   "mba13-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 13″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", tbc: true, applecare: 6848, vendor: "To be confirmed", quote: "Pending" },
   "mba15-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 15″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", base: 77000,   applecare: 7811, vendor: "COM7", quote: "01QTS/26091115" },
-  "asus-expertbook-p5":     { platform: "PC",  name: "ASUS ExpertBook P5 P5405CSA (Core Ultra 7 258V, 32GB, 1TB)", base: 49969, vendor: "Inforgen Data System", quote: "260617-09" },
+  "asus-expertbook-b5-14":  { platform: "PC",  name: "ASUS ExpertBook B5 14″ (Core Ultra 7 255H, 16GB, 512GB, Windows 11 Pro)", base: 44940, vendor: "Inforgen Data System", quote: "261002-10" },
+  "asus-expertbook-b5-16":  { platform: "PC",  name: "ASUS ExpertBook B5 16″ (Core Ultra 5 225H, 32GB, 512GB, Windows 11 Pro)", base: 48899, vendor: "Inforgen Data System", quote: "261002-10" },
   "lenovo-legion5":         { platform: "PC",  name: "Lenovo Legion 5 15IAX11 (Core Ultra 9 290HX Plus, RTX 5070, 16GB, 512GB)", base: 79715, vendor: "COM7", quote: "01QTS/26090061" }
 };
 const MAC_COLOURS = ["Sky Blue", "Silver", "Starlight", "Midnight"];
@@ -52,9 +53,9 @@ const TABLETS = {
   s11: { name: "Samsung Galaxy Tab S11", chip: "", cellLabel: "Wi-Fi + 5G", sizes: [11], storage: [128, 256],
     price: { wifi: { 11: [28900, 32900] }, cell: { 11: [33900, 37900] } },
     colours: ["Gray", "Silver"] },
-  // Microsoft Surface Thailand estimated retail price (surfacethai.net), VAT incl., checked 27 Sep 2026. Wi-Fi only.
-  surface: { name: "Microsoft Surface Pro", chip: "", sizes: [12], storage: [256, 512],
-    price: { wifi: { 12: [31590, 34590] } },
+  // Inforgen quotation 261002-09 (2 Oct 2026), VAT incl. Tablet only (with 45W charger), no keyboard cover. Wi-Fi only.
+  surface: { name: "Microsoft Surface Pro 12″ (Snapdragon X Plus, 16GB, Windows 11 Pro)", chip: "", quote: "261002-09", sizes: [12], storage: [512],
+    price: { wifi: { 12: [42265] } },
     colours: ["Platinum"] }
 };
 
@@ -124,7 +125,7 @@ function doPost(e) {
     const existing = findRow(target, email);
     if (existing) first = cellByHeader(target, existing, "First submitted") || first;
 
-    const fields = { "Updated": now, "First submitted": first, "Email": email, "Name": name };
+    const fields = { "Updated": now, "First submitted": first, "Email": email, "Name": name, "Check": "" };
     SHEETS[kind].headers.slice(FIXED.length).forEach((h, i) => { fields[h] = rec.cells[i]; });
     writeRow(target, existing, fields);
 
@@ -188,11 +189,41 @@ function tabletRecord(d) {
   const title = fam.chip ? fam.name + " (" + fam.chip + ")" : fam.name;
   const connName = conn === "cell" ? (fam.cellLabel || "Wi-Fi + Cellular") : "Wi-Fi";
   return {
-    cells: [title, size + "-inch", connName, gb, nano ? "Yes" : "No", colour, price, topUp, source, grant, clean(d.accessories, 300), "Awaiting quotation", clean(d.notes, 1000), d.family],
+    cells: [title, size + "-inch", connName, gb, nano ? "Yes" : "No", colour, price, topUp, source, grant, fam.quote ? "" : clean(d.accessories, 300), fam.quote ? "Quoted (" + fam.quote + ")" : "Awaiting quotation", clean(d.notes, 1000), d.family],
     summary: title + " " + size + "″ " + connName + " " + gb + (nano ? " nano-texture" : ""),
-    budgetLine: topUp > 0 ? "May need top-up (catalog estimate) from: " + source : "Likely within budget (catalog estimate)",
+    budgetLine: fam.quote
+      ? (topUp > 0 ? "Top-up needed (quotation " + fam.quote + ") from: " + source : "Within budget (quotation " + fam.quote + ")")
+      : (topUp > 0 ? "May need top-up (catalog estimate) from: " + source : "Likely within budget (catalog estimate)"),
     reply: { estTopUp: topUp }
   };
+}
+
+/**
+ * Run from the Apps Script editor after a product is withdrawn or changed.
+ * Highlights rows that still name a discontinued choice and explains why in a "Check" column,
+ * so you know whom to ask to choose again. Rows are never deleted.
+ */
+const DISCONTINUED = {
+  computer: { "asus-expertbook-p5": "ASUS ExpertBook P5 is no longer available. Ask this person to choose again." },
+  tablet: { "surface|256GB": "Surface Pro 256GB is no longer offered (only 512GB is quoted). Ask this person to confirm the 512GB." }
+};
+function markDiscontinued() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let flagged = 0;
+  [["computer", "Item ID", null], ["tablet", "Model ID", "Storage"]].forEach(([kind, idHeader, extra]) => {
+    const sh = ss.getSheetByName(SHEETS[kind].name);
+    if (!sh || sh.getLastRow() < 2) return;
+    if (headersOf(sh).indexOf("Check") < 0) sh.getRange(1, headersOf(sh).length + 1).setValue("Check").setFontWeight("bold").setBackground("#e3edfb");
+    const headers = headersOf(sh), n = sh.getLastRow() - 1;
+    const rows = sh.getRange(2, 1, n, headers.length).getValues();
+    const idCol = headers.indexOf(idHeader), exCol = extra ? headers.indexOf(extra) : -1, chkCol = headers.indexOf("Check");
+    rows.forEach((r, i) => {
+      const key = String(r[idCol]) + (exCol >= 0 ? "|" + String(r[exCol]) : "");
+      const msg = DISCONTINUED[kind][key] || DISCONTINUED[kind][String(r[idCol])];
+      if (msg) { sh.getRange(i + 2, chkCol + 1).setValue(msg); sh.getRange(i + 2, 1, 1, headers.length).setBackground("#fdf0de"); flagged++; }
+    });
+  });
+  SpreadsheetApp.getUi().alert(flagged ? flagged + " row(s) flagged. See the Check column." : "No rows need attention.");
 }
 
 function headersOf(sheet) {
@@ -214,7 +245,7 @@ function writeRow(sheet, row, fields) {
   if (headers.indexOf("Email") < 0) throw new Error("The order sheet is not set up yet. Run setup() in Apps Script.");
   const current = row ? sheet.getRange(row, 1, 1, headers.length).getValues()[0] : headers.map(() => "");
   const values = headers.map((h, i) => Object.prototype.hasOwnProperty.call(fields, h) ? safeCell(fields[h]) : current[i]);
-  if (row) sheet.getRange(row, 1, 1, headers.length).setValues([values]);
+  if (row) sheet.getRange(row, 1, 1, headers.length).setValues([values]).setBackground(null);
   else sheet.appendRow(values);
 }
 function findRow(sheet, email) {

@@ -205,6 +205,8 @@ tr:last-child td{border-bottom:0}
 .estimate-banner{border:1.5px dashed var(--warn);background:var(--warn-soft);color:var(--ink);border-radius:14px;padding:12px 16px;font-size:13.5px;margin-bottom:22px}
 .stage .estimate-banner{margin-bottom:0}
 .estimate-banner b{color:var(--warn)}
+.estimate-banner.quoted{border-style:solid;border-color:var(--line);background:var(--surface-2)}
+.estimate-banner.quoted b{color:var(--ink)}
 .blurb{font-size:14px;color:var(--muted)}
 
 /* Tablet option tiles */
@@ -294,11 +296,16 @@ const CATALOG = [
     hl:[["32GB","memory"],["1TB","SSD"],["15.3″","display"]],
     specs:["M5 chip: 10-core CPU, 10-core GPU, 16-core Neural Engine","32GB unified memory","1TB SSD storage","15.3-inch Liquid Retina display","70W USB-C power adapter","Backlit Magic Keyboard with Touch ID (Thai)","2× Thunderbolt 4, MagSafe 3, Wi-Fi 7, Bluetooth 6","1-year warranty"],
     base:77000, applecare:7811, vendor:"COM7 Public Co., Ltd.", quote:"01QTS/26091115", quoteDate:"2026-09-21", validUntil:"2026-10-21", screen:15 },
-  { id:"asus-expertbook-p5", cat:"pc", name:"ASUS ExpertBook P5", tag:"Business ultraportable", model:"P5405CSA",
-    chip:"Intel Core Ultra 7 258V · Arc 140V",
-    hl:[["32GB","memory"],["1TB","SSD"],["3 yr","on-site"]],
-    specs:["Intel Core Ultra 7 258V (up to 4.8 GHz, 8 cores), AI Boost NPU up to 47 TOPS","Intel Arc 140V graphics","32GB LPDDR5X memory","1TB PCIe 4.0 NVMe SSD","14″ WQXGA 2560×1600, 400 nits, anti-glare","1080p IR camera with privacy shutter, fingerprint reader","Wi-Fi 6E, Bluetooth 5.4","2× USB-A, 2× Thunderbolt 4, HDMI; 1.29 kg","Windows 11 Home + Microsoft Office Home 2024","3-year on-site warranty (1 year accidental damage)","Includes sleeve, USB-A to RJ-45 adapter, wireless mouse"],
-    base:49969, vendor:"Inforgen Data System Co., Ltd.", quote:"260617-09", quoteDate:"2026-06-17", validUntil:"2026-07-17", pc:"slim" },
+  { id:"asus-expertbook-b5-14", cat:"pc", name:"ASUS ExpertBook B5 14″", tag:"Business ultraportable", img:"asus-expertbook-b5-14",
+    chip:"Intel Core Ultra 7 255H · Arc 140T",
+    hl:[["16GB","memory"],["512GB","SSD"],["1.37 kg","weight"]],
+    specs:["Intel Core Ultra 7 255H (up to 5.1 GHz, 16 cores / 16 threads, 24MB cache), NPU 13 TOPS","Intel Arc 140T graphics","16GB DDR5 SO-DIMM memory","512GB M.2 NVMe PCIe 4.0 SSD","14.0″ WUXGA 1920×1200 16:10, 300 nits, anti-glare","1080p FHD + IR camera with privacy shutter","Wi-Fi 7 (tri-band) 2×2, Bluetooth 5.4","3-cell 50Wh battery, 65W adapter","Backlit keyboard; 1.37 kg","Windows 11 Pro","3-year on-site warranty (1st year accidental damage protection)"],
+    base:44940, vendor:"Inforgen Data System Co., Ltd.", quote:"261002-10", quoteDate:"2026-10-02", validUntil:"2026-10-17" },
+  { id:"asus-expertbook-b5-16", cat:"pc", name:"ASUS ExpertBook B5 16″", tag:"Bigger screen, more memory", img:"asus-expertbook-b5-16",
+    chip:"Intel Core Ultra 5 225H · Arc 130T",
+    hl:[["32GB","memory"],["512GB","SSD"],["16″","display"]],
+    specs:["Intel Core Ultra 5 225H (up to 4.9 GHz, 14 cores / 14 threads, 18MB cache), NPU 13 TOPS","Intel Arc 130T graphics","32GB DDR5 SO-DIMM memory","512GB M.2 2280 NVMe PCIe 4.0 SSD","16.0″ WUXGA 1920×1200 16:10, 300 nits, anti-glare","1080p FHD camera with IR (Windows Hello) and privacy shutter","Wi-Fi 7 (tri-band) 2×2, Bluetooth 5.4","3-cell 50Wh battery, USB-C 65W adapter","Backlit keyboard with number pad; 1.75 kg","Windows 11 Pro","3-year on-site warranty (1st year accidental damage protection)"],
+    base:48899, vendor:"Inforgen Data System Co., Ltd.", quote:"261002-10", quoteDate:"2026-10-02", validUntil:"2026-10-17" },
   { id:"lenovo-legion5", cat:"pc", name:"Lenovo Legion 5", tag:"Performance & GPU", model:"15IAX11",
     chip:"Intel Core Ultra 9 290HX Plus · RTX 5070",
     hl:[["RTX 5070","12GB GPU"],["16GB","DDR5"],["512GB","SSD"]],
@@ -331,12 +338,13 @@ const TABLETS = [
     sizes:[11], storage:[128,256],
     price:{ wifi:{11:[28900,32900]}, cell:{11:[33900,37900]} },
     colors:[{id:"gray",name:"Gray",hex:"#6d6f73"},{id:"silver",name:"Silver",hex:"#dfe1e4"}] },
-  { id:"surface", name:"Microsoft Surface Pro", chip:"Windows 11 · Snapdragon X Plus · 16GB memory", tag:"Windows", img:"surface",
-    blurb:"A 12-inch Windows 11 tablet (Copilot+ PC) that runs full desktop apps. Keyboard and pen are sold separately.",
-    note:"The Surface Keyboard, Slim Pen and charger are not included. If you need them, list them under Accessories so we can add them to the quotation request.",
-    source:"Microsoft Surface Thailand estimated retail price (surfacethai.net), VAT included",
-    sizes:[12], storage:[256,512],
-    price:{ wifi:{12:[31590,34590]} },
+  { id:"surface", name:"Microsoft Surface Pro", chip:"Windows 11 Pro · Snapdragon X Plus · 16GB memory", tag:"Windows", img:"surface",
+    blurb:"A 12-inch Windows 11 Pro tablet (Copilot+ PC) that runs full desktop apps. Tablet only; no keyboard cover.",
+    note:"You receive the tablet only, with its 45W USB-C charger. The Surface Keyboard cover is not provided.",
+    quote:"261002-09", vendor:"Inforgen Data System Co., Ltd.", noAccessories:true,
+    source:"Inforgen quotation 261002-09 (2 Oct 2026), VAT included",
+    sizes:[12], storage:[512],
+    price:{ wifi:{12:[42265]} },
     colors:[{id:"platinum",name:"Platinum",hex:"#dcdcdc"}] }
 ];
 
@@ -372,9 +380,10 @@ function tPrice(fam, size, conn, storage, nano){
   return fam.price[conn][size][fam.storage.indexOf(storage)];
 }
 function tMin(fam){ return Math.min(...fam.sizes.map(s => fam.price.wifi[s][0])); }
+function quotedFam(){ const f = famById(state.t.fam); return !!(f && f.quote); }
 function estChip(price){
   const t = topUpOf(price, TABLET_ALLOWANCE);
-  return t === 0 ? '<span class="est ok">Within budget</span>' : '<span class="est warn">May need top-up</span>';
+  return t === 0 ? '<span class="est ok">Within budget</span>' : '<span class="est warn">' + (quotedFam() ? "Top-up needed" : "May need top-up") + '</span>';
 }
 
 /* ---------- product photos ---------- */
@@ -384,7 +393,7 @@ function artFor(it, colorId){
     const c = MAC_COLORS.find(c => c.id === colorId) || MAC_COLORS[1];
     return photo("img/mba" + (it.screen === 15 ? 15 : 13) + "-" + c.file + ".png", it.name + " in " + c.name);
   }
-  return photo(it.pc === "gaming" ? "img/legion-5.png" : "img/asus-expertbook-p5.png", it.name);
+  return photo("img/" + (it.img || (it.pc === "gaming" ? "legion-5" : "asus-expertbook-b5-14")) + ".png", it.name);
 }
 function tabletArt(fam, colorId){
   const c = fam.colors.find(c => c.id === colorId) || fam.colors[0];
@@ -427,7 +436,9 @@ function topupFields(amount, limit, tentative){
   const d = draft;
   return '<div class="topup-box">' +
     '<h2>Top-up budget source <span class="th">แหล่งงบประมาณสมทบ</span></h2>' +
-    (tentative === "tbc"
+    (tentative === "quoted"
+      ? '<p>This tablet costs more than the tablet budget. Tell us which budget will cover the difference.</p>'
+      : tentative === "tbc"
       ? '<p>The price of this set is not confirmed yet, but it is above the ' + baht(limit) + ' allowance. Tell us which budget will cover the top-up.</p>'
       : tentative
       ? '<p>This choice may cost more than the tablet budget. If the final quotation is above the budget, which budget will cover the difference?</p>'
@@ -466,7 +477,7 @@ function savedBanner(){
     line = '<b>' + (o.category === "mac" ? "Mac" : "PC") + ':</b> ' + esc(o.itemName) + ' · ' + (o.tbc ? 'top-up, price TBC' : o.topUp > 0 ? 'top-up <span class="num">' + baht2(o.topUp) + '</span>' : 'within budget');
   } else if (state.savedTablet){
     const o = state.savedTablet;
-    line = '<b>Tablet:</b> ' + esc(o.itemName) + ' · ' + (o.estTopUp > 0 ? 'may need top-up' : 'likely within budget') + ' · awaiting quotation';
+    line = '<b>Tablet:</b> ' + esc(o.itemName) + ' · ' + (o.quoteRef ? (o.estTopUp > 0 ? 'top-up needed' : 'within budget') + ' · quoted price' : (o.estTopUp > 0 ? 'may need top-up' : 'likely within budget') + ' · awaiting quotation');
   }
   if (!line) return "";
   return '<div class="saved fade"><p class="eyebrow">Your current choice · choosing again replaces it</p><div class="saved-row"><p>' + line + '</p><button class="btn small ghost" type="button" data-view-saved="' + (state.saved ? "computer" : "tablet") + '">View</button></div></div>';
@@ -486,7 +497,7 @@ function viewChoose(){
   '<section class="choose three">' +
     '<button type="button" class="pick fade' + (current === "mac" ? " is-current" : "") + '" data-cat="mac">' + mark("mac") + photo("img/mba13-skyblue.png", "MacBook Air") +
       '<h2>Mac</h2><p class="sub">MacBook Air with M5 · macOS</p><p class="range num">' + rangeText("mac") + '</p><span class="cta">Choose Mac ›</span></button>' +
-    '<button type="button" class="pick fade' + (current === "pc" ? " is-current" : "") + '" data-cat="pc">' + mark("pc") + photo("img/asus-expertbook-p5.png", "Windows laptop") +
+    '<button type="button" class="pick fade' + (current === "pc" ? " is-current" : "") + '" data-cat="pc">' + mark("pc") + photo("img/asus-expertbook-b5-14.png", "Windows laptop") +
       '<h2>PC</h2><p class="sub">Windows 11 laptops · ASUS, Lenovo</p><p class="range num">' + rangeText("pc") + '</p><span class="cta">Choose PC ›</span></button>' +
     '<button type="button" class="pick fade' + (current === "tablet" ? " is-current" : "") + '" data-go="tablets">' + mark("tablet") + photo("img/tab-air-blue.png", "Tablet") +
       '<h2>Tablet</h2><p class="sub">iPad, Galaxy Tab or Surface Pro</p><p class="range">Price confirmed after quotation</p><span class="cta">Choose tablet ›</span></button>' +
@@ -561,6 +572,8 @@ function viewTablets(){
       '<div class="hl"><div><b>' + sizes + '</b><span>display</span></div><div><b>' + gb(f.storage[0]) + '–' + gb(f.storage[f.storage.length-1]) + '</b><span>storage</span></div><div><b>' + f.colors.length + '</b><span>' + (f.colors.length === 1 ? "colour" : "colours") + '</span></div></div>' +
       (within
         ? '<div class="cost ok"><b>Options within budget</b><small>Estimate · larger configurations may need a top-up</small></div>'
+        : f.quote
+        ? '<div class="cost warn"><b>Top-up needed</b><small>Quoted price · above the tablet budget</small></div>'
         : '<div class="cost warn"><b>May need top-up</b><small>Estimate · all configurations are likely above the tablet budget</small></div>') +
       '<div class="spacer"></div>' +
       '<button class="btn" type="button" data-fam="' + f.id + '">Choose ' + esc(f.name) + '</button>' +
@@ -611,17 +624,20 @@ function viewTConfigure(){
   return '<div class="config">' +
     '<div class="stage">' +
       '<div class="stage-art" id="stageArt">' + tabletArt(fam, t.color) + '</div>' +
-      '<div class="estimate-banner"><b>Estimate only.</b> Budget status comes from a catalog or online store price. We will request a quotation from the distributor and confirm the final price with you before ordering.</div>' +
+      (fam.quote
+        ? '<div class="estimate-banner quoted"><b>Quoted price.</b> Budget status comes from the distributor’s quotation ' + esc(fam.quote) + '.</div>'
+        : '<div class="estimate-banner"><b>Estimate only.</b> Budget status comes from a catalog or online store price. We will request a quotation from the distributor and confirm the final price with you before ordering.</div>') +
     '</div>' +
     '<form class="panel" id="orderForm" novalidate>' +
       '<div><p class="eyebrow">Tablet request</p><h1>Choose your ' + esc(fam.name) + '</h1><p class="chip" style="color:var(--muted)">' + esc(fam.chip) + '</p></div>' +
       (fam.note ? '<p class="notice">' + esc(fam.note) + '</p>' : '') +
       '<div id="tOpts">' + tOptionsHTML() + '</div>' +
-      '<div class="section"><h2>Estimated cost<span class="th">ค่าใช้จ่ายโดยประมาณ</span></h2><div class="summary" id="summary"></div></div>' +
+      '<div class="section"><h2>' + (fam.quote ? 'Cost<span class="th">ค่าใช้จ่าย</span>' : 'Estimated cost<span class="th">ค่าใช้จ่ายโดยประมาณ</span>') + '</h2><div class="summary" id="summary"></div></div>' +
       '<div id="topupWrap"></div>' +
+      (fam.noAccessories ? '' :
       '<div class="section"><h2>Accessories<span class="th">อุปกรณ์เสริม</span></h2>' +
         '<div class="field"><label for="accessories">Accessories to include in the quotation request</label><input id="accessories" name="accessories" value="' + esc(d.accessories) + '" placeholder="Optional, e.g. stylus, keyboard cover, case"><span class="hint">Accessories are not part of the estimate.</span></div>' +
-      '</div>' +
+      '</div>') +
       contactFields() +
       '<label class="check"><input type="checkbox" id="agree"> <span id="agreeText"></span></label>' +
       '<p class="err" id="formErr" hidden></p>' +
@@ -651,11 +667,12 @@ function tabletReceiptHTML(o){
     '<div class="row"><span>Colour</span><span>' + esc(o.color) + '</span></div>' +
     (o.accessories ? '<div class="row"><span>Accessories to quote</span><span style="text-align:right">' + esc(o.accessories) + '</span></div>' : '') +
     (o.estTopUp > 0
-      ? '<div class="row topup"><span>Budget</span><span>May need top-up</span></div><div class="row"><span>Budget source</span><span style="text-align:right">' + esc(o.budgetSource) + (o.grantCode ? " (" + esc(o.grantCode) + ")" : "") + '</span></div>'
+      ? '<div class="row topup"><span>Budget</span><span>' + (o.quoteRef ? "Top-up needed" : "May need top-up") + '</span></div><div class="row"><span>Budget source</span><span style="text-align:right">' + esc(o.budgetSource) + (o.grantCode ? " (" + esc(o.grantCode) + ")" : "") + '</span></div>'
       : '<div class="row ok"><span>Budget</span><span>Likely within budget</span></div>') +
-    '<div class="row"><span>Status</span><span class="pending-note"><span class="dot" aria-hidden="true"></span>Awaiting quotation</span></div>' +
+    (o.quoteRef ? '<div class="row"><span>Price</span><span>Quoted (' + esc(o.quoteRef) + ')</span></div>'
+      : '<div class="row"><span>Status</span><span class="pending-note"><span class="dot" aria-hidden="true"></span>Awaiting quotation</span></div>') +
     '<div class="row"><span>Requested by</span><span style="text-align:right">' + esc(o.fullName) + '</span></div>' +
-    '<p class="ref">Estimate from catalog · submitted ' + new Date(o.updatedAt).toLocaleString("en-GB") + '</p>' +
+    '<p class="ref">' + (o.quoteRef ? 'Quotation ' + esc(o.quoteRef) : 'Estimate from catalog') + ' · submitted ' + new Date(o.updatedAt).toLocaleString("en-GB") + '</p>' +
   '</div>';
 }
 function viewDone(){
@@ -723,11 +740,17 @@ function updateTSummary(){
   const color = (fam.colors.find(c => c.id === t.color) || {}).name;
   s.innerHTML =
     '<div class="row"><span>' + esc(tabletName()) + '</span><span>' + esc(color) + '</span></div>' +
-    (topUp > 0 ? '<div class="row topup total"><span>Budget</span><span>May need top-up</span></div>'
-               : '<div class="row ok total"><span>Budget</span><span>Likely within budget</span></div>') +
-    '<p class="hint">Estimate only. The final price comes from the distributor’s quotation.</p>';
-  setTopup(topUp, TABLET_ALLOWANCE, true);
-  $("#agreeText").textContent = "I understand this is an estimate. Please request a quotation for this tablet and confirm the final price with me" + (topUp > 0 ? "; I will cover any amount above the allowance from the budget named above." : ".");
+    (fam.quote
+      ? (topUp > 0 ? '<div class="row topup total"><span>Budget</span><span>Top-up needed</span></div>'
+                   : '<div class="row ok total"><span>Budget</span><span>Within budget</span></div>') +
+        '<p class="hint">Price confirmed by the distributor’s quotation ' + esc(fam.quote) + '.</p>'
+      : (topUp > 0 ? '<div class="row topup total"><span>Budget</span><span>May need top-up</span></div>'
+                   : '<div class="row ok total"><span>Budget</span><span>Likely within budget</span></div>') +
+        '<p class="hint">Estimate only. The final price comes from the distributor’s quotation.</p>');
+  setTopup(topUp, TABLET_ALLOWANCE, fam.quote ? "quoted" : true);
+  $("#agreeText").textContent = fam.quote
+    ? "I confirm this is the tablet I want the faculty to order for me" + (topUp > 0 ? " and that I will cover the top-up from the budget named above." : ".")
+    : "I understand this is an estimate. Please request a quotation for this tablet and confirm the final price with me" + (topUp > 0 ? "; I will cover any amount above the allowance from the budget named above." : ".");
   renderBar();
 }
 function tabletName(){
@@ -768,7 +791,8 @@ function renderBar(){
   } else if (state.view === "tconfigure"){
     const {topUp} = tCurrent();
     bar.hidden = false;
-    bar.innerHTML = '<div class="bar-in"><div class="what">' + (topUp > 0 ? '<b style="color:var(--warn)">May need top-up</b>' : '<b style="color:var(--ok)">Likely within budget</b>') + esc(tabletName()) + ' · quotation pending</div>' +
+    const q = quotedFam();
+    bar.innerHTML = '<div class="bar-in"><div class="what">' + (topUp > 0 ? '<b style="color:var(--warn)">' + (q ? "Top-up needed" : "May need top-up") + '</b>' : '<b style="color:var(--ok)">' + (q ? "Within budget" : "Likely within budget") + '</b>') + esc(tabletName()) + (q ? ' · quoted price' : ' · quotation pending') + '</div>' +
       '<button class="btn" type="button" id="submitBtn"' + (readOnly ? " disabled" : "") + '>' + (state.savedTablet ? "Update request" : "Send request") + '</button></div>';
     $("#submitBtn").addEventListener("click", submitTablet);
   } else { bar.hidden = true; bar.innerHTML = ""; }
@@ -838,7 +862,7 @@ function submitTablet(){
     family: fam.id, itemName: tabletName(), chip: fam.chip, size: t.size, connectivity: t.conn === "cell" ? (fam.cellLabel || "Wi-Fi + Cellular") : "Wi-Fi",
     storage: gb(t.storage), nanoTexture: !!t.nano, color: (fam.colors.find(c => c.id === t.color) || {}).name || "",
     estPrice: price, estTopUp: topUp, estWithinBudget: topUp === 0, allowance: TABLET_ALLOWANCE, priceSource: fam.source || TABLET_SOURCE,
-    connCode: t.conn, storageGB: t.storage, status: "awaiting quotation", accessories: val("accessories"),
+    connCode: t.conn, storageGB: t.storage, status: fam.quote ? "quoted" : "awaiting quotation", quoteRef: fam.quote || "", accessories: val("accessories"),
     budgetSource: topUp > 0 ? val("budgetSource") : "", grantCode: topUp > 0 ? val("grantCode") : "",
     submittedAt: state.savedTablet && state.savedTablet.submittedAt ? state.savedTablet.submittedAt : now, updatedAt: now
   }, contactData()), "request", doc => { state.savedTablet = doc; go("done", {doneKind:"tablet"}); });
