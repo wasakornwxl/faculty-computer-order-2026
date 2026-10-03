@@ -63,6 +63,7 @@ After changing `Code.gs`, click **Deploy → Manage deployments → edit (pencil
 Run these from the Apps Script editor: choose the function name in the menu at the top, then click **Run**.
 
 - `markDiscontinued`: highlights rows that still name a product that's no longer offered, and explains why in the **Check** column.
+- `refreshPrices`: after you change a price or quotation in `Code.gs`, recalculates every existing row (price, top-up, quote, and the tablet **Status**). Each change is noted in **Check**. Rows that now need a top-up but have no budget source are highlighted. A Status you typed yourself, such as "Ordered", is never overwritten. Safe to run any time.
 - `migrateP5toB5`: changes every ASUS P5 order to the ASUS ExpertBook B5 14″, updating price, quote and item ID. Name, email, notes and your own columns are kept, and the change is noted in **Check**. Running it again does nothing once there are no P5 rows left.
 
 ## If prices or products change

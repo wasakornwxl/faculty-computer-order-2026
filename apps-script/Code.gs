@@ -265,6 +265,86 @@ function replaceComputer(fromId, toId) {
   return changed;
 }
 
+/**
+ * Run from the Apps Script editor after changing a price or quotation in the lists above
+ * (e.g. a TBC price becomes known, or a quote is renewed). Recalculates every existing row:
+ *  - Computers: name, price, top-up, vendor and quote.
+ *  - Tablets: name, price, top-up and Status ("Quoted (…)" or "Awaiting quotation").
+ *    A Status you typed yourself (e.g. "Ordered", "Delivered") is never overwritten.
+ * Each changed row gets a note in the Check column; rows that now need a top-up but have
+ * no budget source are highlighted. Rows for products no longer offered are left alone
+ * (use markDiscontinued for those).
+ */
+function refreshPrices() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "d MMM yyyy");
+  const fmt = v => typeof v === "number" ? "฿" + v.toLocaleString("en-US") : String(v === "" ? "–" : v);
+  const counts = { changed: 0, needSource: 0, skipped: 0 };
+
+  const eachRow = (sheetName, fn) => {
+    const sh = ss.getSheetByName(sheetName);
+    if (!sh || sh.getLastRow() < 2) return;
+    if (headersOf(sh).indexOf("Check") < 0) sh.getRange(1, headersOf(sh).length + 1).setValue("Check").setFontWeight("bold").setBackground("#e3edfb");
+    const headers = headersOf(sh);
+    const rows = sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getValues();
+    rows.forEach((r, i) => {
+      const get = h => r[headers.indexOf(h)];
+      const res = fn(get);
+      if (!res) { counts.skipped++; return; }
+      const { fields, priceH, topUpH, needSource } = res;
+      const notes = [];
+      Object.keys(fields).forEach(h => { if (headers.indexOf(h) >= 0 && String(get(h)) !== String(fields[h])) notes.push(h); });
+      if (!notes.length && !needSource) return;
+      if (notes.indexOf(priceH) >= 0 || notes.indexOf(topUpH) >= 0) {
+        fields["Check"] = "Price updated " + stamp + ": " + fmt(get(priceH)) + " → " + fmt(fields[priceH]) + " (top-up " + fmt(fields[topUpH]) + ")";
+      } else if (notes.length) {
+        fields["Check"] = "Updated " + stamp + ": " + notes.join(", ");
+      }
+      if (needSource) fields["Check"] = (fields["Check"] ? fields["Check"] + ". " : "") + "Now needs a top-up but has no budget source. Please ask this person.";
+      writeRow(sh, i + 2, fields);
+      if (needSource) { sh.getRange(i + 2, 1, 1, headers.length).setBackground("#fdf0de"); counts.needSource++; }
+      if (notes.length) counts.changed++;
+    });
+  };
+
+  eachRow(SHEETS.computer.name, get => {
+    const it = COMPUTERS[get("Item ID")];
+    if (!it) return null;
+    const ac = it.platform === "Mac" && get("AppleCare+") === "Yes" && !!it.applecare;
+    const total = it.tbc ? "TBC" : round2(it.base + (ac ? it.applecare : 0));
+    const topUp = it.tbc ? "TBC" : Math.max(0, round2(total - CONFIG.COMPUTER_ALLOWANCE));
+    return {
+      fields: { "Computer": it.name, "Price (THB)": total, "Top-up (THB)": topUp, "Vendor": it.vendor, "Quote": it.quote },
+      priceH: "Price (THB)", topUpH: "Top-up (THB)",
+      needSource: (topUp === "TBC" || topUp > 0) && !String(get("Budget source")).trim()
+    };
+  });
+
+  eachRow(SHEETS.tablet.name, get => {
+    const fam = TABLETS[get("Model ID")];
+    if (!fam) return null;
+    const size = parseInt(get("Size"), 10);
+    const st = String(get("Storage")), storage = /TB/i.test(st) ? parseFloat(st) * 1024 : parseInt(st, 10);
+    const conn = String(get("Connectivity")) === "Wi-Fi" ? "wifi" : "cell";
+    const nano = get("Nano-texture") === "Yes" && !!fam.nano && storage >= 1024;
+    const list = fam.price[conn] && fam.price[conn][size];
+    const idx = fam.storage.indexOf(storage);
+    if (!list || idx < 0) return null; // configuration no longer offered
+    const price = nano ? fam.nano[conn][size][storage] : list[idx];
+    const topUp = Math.max(0, price - CONFIG.TABLET_ALLOWANCE);
+    const fields = { "Tablet": fam.chip ? fam.name + " (" + fam.chip + ")" : fam.name, "Est. price (THB)": price, "Est. top-up (THB)": topUp };
+    const status = String(get("Status"));
+    if (status === "" || status === "Awaiting quotation" || /^Quoted/.test(status)) fields["Status"] = fam.quote ? "Quoted (" + fam.quote + ")" : "Awaiting quotation";
+    return { fields, priceH: "Est. price (THB)", topUpH: "Est. top-up (THB)", needSource: topUp > 0 && !String(get("Budget source")).trim() };
+  });
+
+  SpreadsheetApp.getUi().alert(
+    counts.changed + " row(s) updated." +
+    (counts.needSource ? "\n" + counts.needSource + " row(s) now need a top-up but have no budget source (highlighted)." : "") +
+    (counts.skipped ? "\n" + counts.skipped + " row(s) skipped because the product is no longer offered; run markDiscontinued." : "") +
+    "\nSee the Check column for details.");
+}
+
 function headersOf(sheet) {
   const cols = sheet.getLastColumn();
   return cols ? sheet.getRange(1, 1, 1, cols).getValues()[0].map(h => String(h).trim()) : [];
