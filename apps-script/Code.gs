@@ -29,7 +29,6 @@ const COMPUTERS = {
   "mba13-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 13″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", tbc: true, applecare: 6848, vendor: "To be confirmed", quote: "Pending" },
   "mba15-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 15″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", base: 77000,   applecare: 7811, vendor: "COM7", quote: "01QTS/26091115" },
   "asus-expertbook-b5-14":  { platform: "PC",  name: "ASUS ExpertBook B5 14″ (Core Ultra 7 255H, 16GB, 512GB, Windows 11 Pro)", base: 44940, vendor: "Inforgen Data System", quote: "261002-10" },
-  "asus-expertbook-b5-16":  { platform: "PC",  name: "ASUS ExpertBook B5 16″ (Core Ultra 5 225H, 32GB, 512GB, Windows 11 Pro)", base: 48899, vendor: "Inforgen Data System", quote: "261002-10" },
   "lenovo-legion5":         { platform: "PC",  name: "Lenovo Legion 5 15IAX11 (Core Ultra 9 290HX Plus, RTX 5070, 16GB, 512GB)", base: 79715, vendor: "COM7", quote: "01QTS/26090061" }
 };
 const MAC_COLOURS = ["Sky Blue", "Silver", "Starlight", "Midnight"];
@@ -204,7 +203,10 @@ function tabletRecord(d) {
  * so you know whom to ask to choose again. Rows are never deleted.
  */
 const DISCONTINUED = {
-  computer: { "asus-expertbook-p5": "ASUS ExpertBook P5 is no longer available. Ask this person to choose again." },
+  computer: {
+    "asus-expertbook-p5": "ASUS ExpertBook P5 is no longer available. Ask this person to choose again.",
+    "asus-expertbook-b5-16": "ASUS ExpertBook B5 16″ is no longer offered (only the B5 14″). Ask this person to choose again."
+  },
   tablet: { "surface|256GB": "Surface Pro 256GB is no longer offered (only 512GB is quoted). Ask this person to confirm the 512GB." }
 };
 function markDiscontinued() {
