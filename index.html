@@ -569,7 +569,7 @@ function viewTablets(){
     return '<article class="card fade">' + tabletArt(f, f.colors[0].id) +
       '<div><p class="eyebrow">' + esc(f.tag) + '</p><h3>' + esc(f.name) + '</h3><p class="chip">' + esc(f.chip) + ' · ' + sizes + '</p></div>' +
       '<p class="blurb">' + esc(f.blurb) + '</p>' +
-      '<div class="hl"><div><b>' + sizes + '</b><span>display</span></div><div><b>' + gb(f.storage[0]) + '–' + gb(f.storage[f.storage.length-1]) + '</b><span>storage</span></div><div><b>' + f.colors.length + '</b><span>' + (f.colors.length === 1 ? "colour" : "colours") + '</span></div></div>' +
+      '<div class="hl"><div><b>' + sizes + '</b><span>display</span></div><div><b>' + gb(f.storage[0]) + (f.storage.length > 1 ? '–' + gb(f.storage[f.storage.length-1]) : '') + '</b><span>storage</span></div><div><b>' + f.colors.length + '</b><span>' + (f.colors.length === 1 ? "colour" : "colours") + '</span></div></div>' +
       (within
         ? '<div class="cost ok"><b>Options within budget</b><small>Estimate · larger configurations may need a top-up</small></div>'
         : f.quote
@@ -682,7 +682,7 @@ function viewDone(){
   return '<section class="done fade">' +
     '<div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>' +
     (tablet
-      ? '<h1>Your tablet request is in</h1><p style="color:var(--muted)">We will request a quotation from the distributor and contact you to confirm the final price. <span class="th">ระบบได้บันทึกคำขอของคุณแล้ว</span></p>' + tabletReceiptHTML(o)
+      ? (o.quoteRef ? '<h1>Your tablet order is confirmed</h1><p style="color:var(--muted)">The purchasing team has your selection.' : '<h1>Your tablet request is in</h1><p style="color:var(--muted)">We will request a quotation from the distributor and contact you to confirm the final price.') + ' <span class="th">ระบบได้บันทึกคำขอของคุณแล้ว</span></p>' + tabletReceiptHTML(o)
       : '<h1>Your order is confirmed</h1><p style="color:var(--muted)">The purchasing team has your selection. <span class="th">ระบบได้บันทึกการยืนยันของคุณแล้ว</span></p>' + receiptHTML(o)) +
     '<div class="actions">' +
       '<button class="btn ghost" type="button" data-change="' + (tablet ? "tablet" : "computer") + '">' + (tablet ? "Change my tablet request" : "Change my order") + '</button>' +
@@ -793,7 +793,7 @@ function renderBar(){
     bar.hidden = false;
     const q = quotedFam();
     bar.innerHTML = '<div class="bar-in"><div class="what">' + (topUp > 0 ? '<b style="color:var(--warn)">' + (q ? "Top-up needed" : "May need top-up") + '</b>' : '<b style="color:var(--ok)">' + (q ? "Within budget" : "Likely within budget") + '</b>') + esc(tabletName()) + (q ? ' · quoted price' : ' · quotation pending') + '</div>' +
-      '<button class="btn" type="button" id="submitBtn"' + (readOnly ? " disabled" : "") + '>' + (state.savedTablet ? "Update request" : "Send request") + '</button></div>';
+      '<button class="btn" type="button" id="submitBtn"' + (readOnly ? " disabled" : "") + '>' + (q ? (state.savedTablet ? "Update order" : "Confirm order") : (state.savedTablet ? "Update request" : "Send request")) + '</button></div>';
     $("#submitBtn").addEventListener("click", submitTablet);
   } else { bar.hidden = true; bar.innerHTML = ""; }
 }
