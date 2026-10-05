@@ -29,7 +29,7 @@ const COMPUTERS = {
   "mba13-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 13″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", tbc: true, applecare: 6848, vendor: "To be confirmed", quote: "Pending" },
   "mba15-m5-10g-32-1tb":    { platform: "Mac", name: "MacBook Air 15″ (M5 10-core CPU / 10-core GPU, 32GB, 1TB, Thai keyboard)", base: 77000,   applecare: 7811, vendor: "COM7", quote: "01QTS/26091115" },
   "asus-expertbook-b5-14":  { platform: "PC",  name: "ASUS ExpertBook B5 14″ (Core Ultra 7 255H, 16GB, 512GB, Windows 11 Pro)", base: 44940, vendor: "Inforgen Data System", quote: "261002-10" },
-  "lenovo-legion5":         { platform: "PC",  name: "Lenovo Legion 5 15IAX11 (Core Ultra 9 290HX Plus, RTX 5070, 16GB, 512GB)", base: 79715, vendor: "COM7", quote: "01QTS/26090061" }
+  "lenovo-legion5":         { platform: "PC",  name: "Lenovo Legion Pro 5 16IAX10 (Core Ultra 9 290HX Plus, RTX 5070, 32GB, 512GB, 16″ OLED)", base: 107535, vendor: "Inforgen Data System", quote: "261005-10" }
 };
 const MAC_COLOURS = ["Sky Blue", "Silver", "Starlight", "Midnight"];
 
@@ -279,7 +279,7 @@ function refreshPrices() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "d MMM yyyy");
   const fmt = v => typeof v === "number" ? "฿" + v.toLocaleString("en-US") : String(v === "" ? "–" : v);
-  const counts = { changed: 0, needSource: 0, skipped: 0 };
+  const counts = { changed: 0, needSource: 0, raised: 0, skipped: 0 };
 
   const eachRow = (sheetName, fn) => {
     const sh = ss.getSheetByName(sheetName);
@@ -300,9 +300,15 @@ function refreshPrices() {
       } else if (notes.length) {
         fields["Check"] = "Updated " + stamp + ": " + notes.join(", ");
       }
+      const oldTop = get(topUpH), newTop = fields[topUpH];
+      const raised = !needSource && typeof newTop === "number" && newTop > 0 &&
+        (oldTop === "TBC" || (typeof oldTop === "number" && newTop > oldTop));
       if (needSource) fields["Check"] = (fields["Check"] ? fields["Check"] + ". " : "") + "Now needs a top-up but has no budget source. Please ask this person.";
+      if (raised) fields["Check"] = (fields["Check"] ? fields["Check"] + ". " : "") + "Top-up went up. Please ask this person to reconfirm their budget source.";
       writeRow(sh, i + 2, fields);
-      if (needSource) { sh.getRange(i + 2, 1, 1, headers.length).setBackground("#fdf0de"); counts.needSource++; }
+      if (needSource || raised) sh.getRange(i + 2, 1, 1, headers.length).setBackground("#fdf0de");
+      if (needSource) counts.needSource++;
+      if (raised) counts.raised++;
       if (notes.length) counts.changed++;
     });
   };
@@ -341,6 +347,7 @@ function refreshPrices() {
   SpreadsheetApp.getUi().alert(
     counts.changed + " row(s) updated." +
     (counts.needSource ? "\n" + counts.needSource + " row(s) now need a top-up but have no budget source (highlighted)." : "") +
+    (counts.raised ? "\n" + counts.raised + " row(s) have a higher top-up than before; ask them to reconfirm (highlighted)." : "") +
     (counts.skipped ? "\n" + counts.skipped + " row(s) skipped because the product is no longer offered; run markDiscontinued." : "") +
     "\nSee the Check column for details.");
 }
