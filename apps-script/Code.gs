@@ -352,6 +352,99 @@ function refreshPrices() {
     "\nSee the Check column for details.");
 }
 
+/**
+ * Run from the Apps Script editor. Rebuilds a "Summary" tab with:
+ *  - Mac orders grouped by model, AppleCare+ and colour (quantity, value, top-up), then by person.
+ *  - iPad requests grouped by configuration and colour, then by person.
+ * Other computers and tablets (PC, Galaxy Tab, Surface) are left out of this summary.
+ * Re-run any time; the Summary tab is cleared and rewritten. Order rows are never changed.
+ */
+function summarizeOrders() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const read = name => {
+    const sh = ss.getSheetByName(name);
+    if (!sh || sh.getLastRow() < 2) return [];
+    const headers = headersOf(sh);
+    return sh.getRange(2, 1, sh.getLastRow() - 1, headers.length).getValues()
+      .map(r => { const o = {}; headers.forEach((h, i) => { o[h] = r[i]; }); return o; })
+      .filter(o => String(o["Email"]).trim());
+  };
+  const num = v => typeof v === "number" ? v : null;
+  // Adds known amounts; rows still "TBC" are counted separately, e.g. "258,296 + 1 TBC".
+  const sum = (rows, h) => {
+    const known = rows.filter(r => num(r[h]) !== null), tbc = rows.length - known.length;
+    const total = round2(known.reduce((a, r) => a + r[h], 0));
+    if (!tbc) return total;
+    return known.length ? total.toLocaleString("en-US") + " + " + tbc + " TBC" : "TBC";
+  };
+  const group = (rows, keyFn) => {
+    const m = {};
+    rows.forEach(r => { const k = keyFn(r).join("\u0001"); (m[k] = m[k] || { key: keyFn(r), rows: [] }).rows.push(r); });
+    return Object.keys(m).sort().map(k => m[k]);
+  };
+
+  const macs = read(SHEETS.computer.name).filter(r => r["Platform"] === "Mac");
+  const ipads = read(SHEETS.tablet.name).filter(r => ["ipad", "air", "pro"].indexOf(String(r["Model ID"])) >= 0);
+
+  const out = [];
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "d MMM yyyy HH:mm");
+  out.push(["Order summary: Mac and iPad", "", "", "", "", "", "", "", ""]);
+  out.push(["Generated " + stamp + " · " + macs.length + " Mac order(s), " + ipads.length + " iPad request(s)", "", "", "", "", "", "", "", ""]);
+  out.push(["", "", "", "", "", "", "", "", ""]);
+
+  const sections = []; // [startRow, kind] for formatting
+  const section = (title, header, rows, kind) => {
+    out.push([title, "", "", "", "", "", "", "", ""]);
+    sections.push([out.length, "title"]);
+    out.push(pad(header)); sections.push([out.length, "header"]);
+    rows.forEach(r => out.push(pad(r)));
+    if (kind === "total") sections.push([out.length, "total"]);
+    out.push(pad([]));
+  };
+  const pad = r => { const a = r.slice(0, 9); while (a.length < 9) a.push(""); return a; };
+
+  // Mac by model
+  const macGroups = group(macs, r => [r["Computer"], r["AppleCare+"] || "No", r["Colour"] || "–"]).map(g => [
+    g.key[0], g.key[1], g.key[2], g.rows.length, num(g.rows[0]["Price (THB)"]) === null ? "TBC" : g.rows[0]["Price (THB)"],
+    sum(g.rows, "Price (THB)"), sum(g.rows, "Top-up (THB)"), g.rows[0]["Quote"]
+  ]);
+  macGroups.push(["Total", "", "", macs.length, "", sum(macs, "Price (THB)"), sum(macs, "Top-up (THB)"), ""]);
+  section("Mac: by model", ["Computer", "AppleCare+", "Colour", "Qty", "Unit price (THB)", "Total (THB)", "Faculty top-up (THB)", "Quote"], macGroups, "total");
+
+  // Mac by person
+  section("Mac: by person", ["Name", "Email", "Computer", "Colour", "AppleCare+", "Price (THB)", "Top-up (THB)", "Budget source", "Check"],
+    macs.slice().sort((a, b) => String(a["Name"]).localeCompare(String(b["Name"])))
+      .map(r => [r["Name"], r["Email"], r["Computer"], r["Colour"], r["AppleCare+"], r["Price (THB)"], r["Top-up (THB)"], r["Budget source"], r["Check"] || ""]));
+
+  // iPad by configuration
+  const ipadGroups = group(ipads, r => [r["Tablet"], r["Size"], r["Connectivity"], r["Storage"], r["Nano-texture"] === "Yes" ? "Nano-texture" : "Standard", r["Colour"]]).map(g => [
+    g.key[0] + " " + g.key[1] + " " + g.key[2] + " " + g.key[3] + (g.key[4] === "Nano-texture" ? " nano-texture" : ""), g.key[5], g.rows.length,
+    g.rows[0]["Est. price (THB)"], sum(g.rows, "Est. price (THB)"), sum(g.rows, "Est. top-up (THB)"), g.rows[0]["Status"]
+  ]);
+  ipadGroups.push(["Total", "", ipads.length, "", sum(ipads, "Est. price (THB)"), sum(ipads, "Est. top-up (THB)"), ""]);
+  section("iPad: by configuration (catalog estimates, not a quotation)", ["Configuration", "Colour", "Qty", "Est. unit price (THB)", "Est. total (THB)", "Est. top-up (THB)", "Status"], ipadGroups, "total");
+
+  // iPad by person
+  section("iPad: by person", ["Name", "Email", "Tablet", "Storage", "Connectivity", "Colour", "Est. price (THB)", "Budget source", "Accessories"],
+    ipads.slice().sort((a, b) => String(a["Name"]).localeCompare(String(b["Name"])))
+      .map(r => [r["Name"], r["Email"], r["Tablet"] + " " + r["Size"], r["Storage"], r["Connectivity"], r["Colour"], r["Est. price (THB)"], r["Budget source"], r["Accessories"]]));
+
+  const sh = ss.getSheetByName("Summary") || ss.insertSheet("Summary");
+  sh.clear();
+  sh.getRange(1, 1, out.length, 9).setValues(out);
+  sh.getRange(1, 1).setFontWeight("bold").setFontSize(14);
+  sections.forEach(([row, kind]) => {
+    const rg = sh.getRange(row, 1, 1, 9);
+    if (kind === "title") rg.setFontWeight("bold").setFontSize(12);
+    if (kind === "header") rg.setFontWeight("bold").setBackground("#e3edfb");
+    if (kind === "total") rg.setFontWeight("bold").setBackground("#f1f3f6");
+  });
+  sh.getRange(1, 1, out.length, 9).setNumberFormat("#,##0.##");
+  sh.autoResizeColumns(1, 9);
+  ss.setActiveSheet(sh);
+  SpreadsheetApp.getUi().alert("Summary updated: " + macs.length + " Mac order(s), " + ipads.length + " iPad request(s). See the Summary tab.");
+}
+
 function headersOf(sheet) {
   const cols = sheet.getLastColumn();
   return cols ? sheet.getRange(1, 1, 1, cols).getValues()[0].map(h => String(h).trim()) : [];

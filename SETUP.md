@@ -64,6 +64,7 @@ Run these from the Apps Script editor: choose the function name in the menu at t
 
 - `markDiscontinued`: highlights rows that still name a product that's no longer offered, and explains why in the **Check** column.
 - `refreshPrices`: after you change a price or quotation in `Code.gs`, recalculates every existing row (price, top-up, quote, and the tablet **Status**). Each change is noted in **Check**. Rows that now need a top-up but have no budget source are highlighted. A Status you typed yourself, such as "Ordered", is never overwritten. Safe to run any time.
+- `summarizeOrders`: rebuilds a **Summary** tab with Mac orders grouped by model, AppleCare+ and colour (quantity, total value, total top-up), iPad requests grouped by configuration and colour, and a by-person list for each. Order rows are not changed.
 - `migrateP5toB5`: changes every ASUS P5 order to the ASUS ExpertBook B5 14″, updating price, quote and item ID. Name, email, notes and your own columns are kept, and the change is noted in **Check**. Running it again does nothing once there are no P5 rows left.
 
 ## If prices or products change
